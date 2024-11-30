@@ -90,5 +90,11 @@ def main():
                 print(f"The folder '{folder_name}' was not created. User declined.")
                 logging.info(f"User declined to create folder '{folder_name}'.")
 
+
+# Now we will create the part where we extract the data from the 
+# Ai synthetic image data generator 
+
+
+
 if __name__ == "__main__":
     main()
