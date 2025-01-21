@@ -53,13 +53,13 @@ model.load_state_dict(torch.load('path/to/state_vggface2_enet0_new.pt'))
 ### 2.3 Emotion Categories
 Eight distinct emotion classes:
 - Anger
-- Contempt
 - Disgust
 - Fear
 - Happiness
 - Neutral
 - Sadness
 - Surprise
+- Contempt * in case of dataset support
 
 ## 3. Evaluation Framework
 
@@ -107,7 +107,9 @@ Phase 2: Synthetic Integration
 
 ## 4. Technical Implementation Details
 
-### 4.1 Model Configuration
+### 4.1 Model Configuration 
+#### To be subjected to changes 
+
 ```python
 # Training parameters
 learning_rate = 1e-4
@@ -161,3 +163,117 @@ project_root/
 - Extended synthetic data generation
 - Advanced domain adaptation
 - Multi-modal integration possibilities
+
+## Promt Engineered with claude for using it in llms
+# FER (Facial Emotion Recognition) Project Guide
+
+## Project Context & Goals
+Building emotion recognition system using:
+- EfficientNet-B0 base model
+- VGGFace2 pre-trained weights
+- Limited synthetic data (30 image credits)
+- 8 emotion classes
+
+## Key Implementation Details
+```python
+# Core model structure
+model = timm.create_model('tf_efficientnet_b0_ns', pretrained=False)
+model.classifier = torch.nn.Identity()
+model.load_state_dict(torch.load('weights.pt'))
+
+# Critical parameters
+input_size = 224  # Model input
+grid_size = 1024  # Synthetic images
+face_size = 128   # After cropping
+grid_layout = 6   # 6x6 faces per image
+```
+
+## Specific Questions Format
+When asking about this project, specify:
+1. Which stage: [weights loading/synthetic data/training/evaluation]
+2. Current issue: [specific problem or goal]
+3. Relevant constraints: [GPU memory/dataset size/etc]
+
+## Example Questions
+"Given this project structure, how would you:
+- Load and verify the pre-trained weights are working correctly?
+- Extract individual 128x128 faces from a 6x6 grid image?
+- Implement efficient batch processing for training?
+- Evaluate performance across real and synthetic data?"
+
+## Technical Constraints
+- Memory: Standard GPU (8-16GB VRAM)
+- Data: 30 synthetic image credits
+- Input: 224x224 for model
+- Output: 8 emotion classes
+
+## Expected Outputs
+1. Working pre-trained model
+2. Processed synthetic dataset
+3. Performance metrics on both data types
+
+When asking questions, please specify which component you're working with and any specific implementation challenges.
+
+
+
+# Project Structure for FER Implementation
+
+```
+fer_project/
+├── configs/
+│   └── config.yaml           # Model and training configurations
+│
+├── data/
+│   ├── real/                 # Real image datasets
+│   │   ├── train/
+│   │   └── test/
+│   └── synthetic/            # Generated synthetic images
+│       ├── raw/              # Original 1024x1024 grid images
+│       └── processed/        # Extracted 128x128 faces
+│
+├── models/
+│   ├── __init__.py
+│   ├── model.py             # EfficientNet model setup
+│   └── weights/             # Pre-trained weights
+│
+├── utils/
+│   ├── __init__.py
+│   ├── data_processing.py   # Image processing utilities
+│   └── evaluation.py        # Evaluation metrics
+│
+├── scripts/
+│   ├── train.py            # Training script
+│   ├── evaluate.py         # Evaluation script
+│   └── generate_faces.py   # Synthetic data generation
+│
+├── requirements.txt
+└── README.md
+```
+
+## Key Files Description
+
+### Core Files
+- `model.py`: EfficientNet implementation with pre-trained weights loading
+- `data_processing.py`: Grid image processing and face extraction
+- `train.py`: Main training loop
+- `evaluate.py`: Performance evaluation
+
+### Configuration
+`config.yaml`: Contains model parameters:
+```yaml
+model:
+  input_size: 224
+  num_classes: 8
+  weights_path: "models/weights/vggface2_weights.pt"
+
+data:
+  grid_size: 1024
+  face_size: 128
+  grid_layout: 6
+```
+
+This structure:
+1. Separates concerns clearly
+2. Keeps data organization simple
+3. Maintains easy weight management
+4. Provides straightforward script access
