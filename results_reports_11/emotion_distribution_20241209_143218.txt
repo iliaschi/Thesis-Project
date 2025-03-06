@@ -1,9 +1,0 @@
-Emotion Distribution Analysis
-==================================================
-
-Analysis Date: 20241209_143218
-
-Cluster 1: angry 65.0% | sad 12.0% | surprised 15.0% | happy 8.0%
-Cluster 2: angry 11.0% | sad 58.0% | surprised 13.0% | happy 18.0%
-Cluster 3: angry 17.0% | sad 14.0% | surprised 59.0% | happy 10.0%
-Cluster 4: angry 13.0% | sad 7.0% | surprised 18.0% | happy 62.0%

@@ -1,8 +1,0 @@
-Classification Results - 20241209_132120
-==================================================
-
-Total files in folder: 28
-Total image files: 0
-Images processed: 0
-
-No images were processed successfully.

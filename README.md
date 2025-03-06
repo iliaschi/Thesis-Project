@@ -231,6 +231,45 @@ fer_project/
 │       ├── raw/              # Original 1024x1024 grid images
 │       └── processed/        # Extracted 128x128 faces
 │
+├── data/
+│    ├── real/
+│    │   ├── fer2013/
+│    │   │   ├── train/
+│    │   │   │   ├── angry/
+│    │   │   │   ├── happy/
+│    │   │   │   └── ...
+│    │   │   └── test/
+│    │   │       ├── angry/
+│    │   │       ├── happy/
+│    │   │       └── ...
+│    │   │
+│    │   └── affectnet/
+│    │       ├── train/
+│    │       │   ├── angry/
+│    │       │   ├── happy/
+│    │       │   └── ...
+│    │       └── test/
+│    │           ├── angry/
+│    │           ├── happy/
+│    │           └── ...
+│    │
+│    └── synthetic/
+│          ├── raw_grids/
+│          │   ├── train/
+│          │   │   └── grid_images/
+│          │   └── test/
+│          │       └── grid_images/
+│          │
+│          └── processed/
+│              ├── train/
+│              │   ├── angry/
+│              │   ├── happy/
+│              │   └── ...
+│              └── test/
+│                  ├── angry/
+│                  ├── happy/
+│                  └── ...
+│
 ├── models/
 │   ├── __init__.py
 │   ├── model.py             # EfficientNet model setup
@@ -277,3 +316,111 @@ This structure:
 2. Keeps data organization simple
 3. Maintains easy weight management
 4. Provides straightforward script access
+
+
+## Promt engineering
+Using this as a base
+
+
+### Some are smiling!?
+'A single image arranged in a 6x6 grid, each cell containing a distinct male individual with diverse ethnicities, hair colors, and skin tones. The faces are front-facing with neutral expressions, photographed in a consistent, well-lit, studio environment, with uniform backgrounds. The layout must be equally spaced, and each face should be clearly separated from the others.'
+Creates a 3x3 or a 5x5 dimension grid for some reasons.
+
+'A single image ,containing 36 distinct male individuals with diverse ethnicities, hair colors, and skin tones. The faces are front-facing with neutral expressions, photographed in a consistent, well-lit, studio environment, with uniform backgrounds. The layout must be equally spaced, and each face should be clearly separated from the others.'
+produces unequal results with chaotic rows and columns for flux schnell
+Good results for flux dex
+
+Adding the promt of no smiling brakes the photos
+
+-A image arranged in a 6x6 grid, each cell containing a distinct male individual with diverse ethnicities, hair colors, and skin tones. The faces are front-facing with neutral expressions, photographed in a well lit environment. The layout must be equally spaced, and each face should be clearly separated from the others.
+  -- Flux dev best, others bad.
+
+Please generate 36 faces of men with neutral emotions, the faces are front-facing. The men should have a high diversity in gender, age, ethnicity, hair color, skin color, etc.
+gives cartoon faces for flux + stable diff
+
+Please generate 36 photo realistic faces of men with neutral emotions, the faces are front-facing. The men should have a high diversity in gender, age, ethnicity, hair color, skin color, etc.
+gives cartoon faces for flux + stable diff
+
+
+### Women
+using best promts
+- A image arranged in a 6x6 grid, each cell containing a distinct women individuals with diverse ethnicities, hair, hair colors, and skin tones. The faces are front-facing with angry expressions, photographed in a well lit environment. The layout must be equally spaced, and each face should be clearly separated from the others.
+
+-angry showed hands in some images
+A image arranged in a 6x6 grid, each cell containing a distinct women individuals with diverse ethnicities, hair, hair colors, and skin tones. The faces are front-facing with fear expressions, photographed in a well lit environment. The layout must be equally spaced, and each face should be clearly separated from the others.
+
+A image arranged in a 6x6 grid, each cell containing a distinct women individuals showing distugst emotions. Each one with diverse ethnicities, hair, hair colors, and skin tones. The faces are front-facing with fear expressions, photographed in a well lit environment. The layout must be equally spaced, and each face should be clearly separated from the others.
+Better result.
+-Having the emotion at the beggining increases the intensity.
+
+
+- Variations of intensity of emotions would change things
+See and test how the varying intensity will work 
+
+- Clustering of emotions to groups and seeing the accuracy then
+One example would be positive vs negative emotions and seeing the accuracy then
+
+- Accuracy over speficic categories instead of overall ones
+do an emotion evaluation first instead of #
+
+
+A photo of a movie of a 6x6 dimensions grid, so six images for height and six images for width, each image cell containing a distinct women individuals with diverse ethnicities, hair, hair colors, and skin tones. Faces are front-facing and show fear emotional expressions. The layout must be equally spaced, and each face should be clearly separated from the others.
+
+Adding the movie in the promt increases the emotions showed.
+A movie photo of a 6x6 dimensions grid of portraits, so six images for height and six images for width, each image cell containing a distinct women individuals with diverse ethnicities, hair, hair colors, and skin tones. Faces are front-facing and show fear emotional expressions and well light environment. The layout must be equally spaced, and each face should be full and clearly separated from the others.
+
+When adding 'realistic' the models hallucinate.
+This creates images more cartoonish. Maybe because it implies
+that it is not realistic itself
+
+DALLEE added 1 man in one of the images
+
+
+
+A movie photo, of a 6x6 dimension grid of portraits with grey background, so six images for height and six images for width, each image cell containing a distinct women individuals with diverse ethnicities, hair, hair colors, and skin tones. Faces are front-facing and show high surprised emotional expressions and well light environment. The layout must be equally spaced, and each face should be realistic, full and clearly separated from the others.
+
+
+new with age ranges 
+A movie photo of a 6x6 dimensions grid of portraits, so six images for height and six images for width, each image cell containing a distinct women individuals with diverse ethnicities, hair, age ranges, and skin tones. Faces are front-facing and show fear emotional expressions and well light environment. The layout must be equally spaced, and each face should be full and clearly separated from the others.
+
+
+A movie photo of a 6x6 dimensions grid of portraits, so six images for height and six images for width, each image cell containing a distinct women individuals with diverse ethnicities, hair, age ranges, and skin tones. Faces are front-facing and show fear emotional expressions and well light environment. The layout must be equally spaced, and each face should be full and clearly separated from the others.
+
+
+best 
+A grid of a 6x6 dimension professional headshot movie portaits, each image cell containing a distinct women individuals with diverse ethnicities, hair, age ranges and skin tones. Faces are front-facing and show extreme angry emotional expressions and well light environment. The layout must be equally spaced, and each face should be full shown and clearly separated from the others.
+
+A grid of a 6x6 dimension professional headshot movie portaits, each image cell containing a distinct women individuals with diverse ethnicities, hair, age ranges and skin tones. Faces are front-facing and show extreme sad emotional expressions and well light environment. The layout must be equally spaced, and each face should be full shown and clearly separated from the others.
+
+
+
+Best 
+
+A photo grid of a 6x6 dimension headshot movie portaits, each image cell containing a distinct women individuals with diverse ethnicities, hair, age ranges and skin tones. Faces are front-facing and show neutral emotional expressions and well light environment. It is important that the layout must be equally spaced, and each face should be full shown and clearly separated from the others.
+
+
+
+## Research Questions
+ok now I am thinking so now i have real images from FER2013 and AffectNet and have the following research questions:
+
+1) How effecientnetB0 and B2 when pretrained of real images perform on synthetic images
+2) How the model when finetuned on synthetic performs of real images
+3) What are the features that the models consider more important and when trained on real and what when trained on synthetic
+4) What differences do the models find between the real and synthetic images
+
+Performance of Pre-trained Models on Synthetic Images
+
+1 Approach: Take EfficientNet-B0 and B2 pre-trained on real datasets (FER2013, AffectNet) and directly evaluate them on the synthetic dataset. Compare metrics (accuracy, F1-score) to gauge how well real-data knowledge transfers to artificial faces.
+Implementation: Simply load the pre-trained weights, run inference on your synthetic dataset, and record relevant performance scores (per-class and overall).
+Fine-tuning on Synthetic Data and Testing on Real Images
+
+2 Approach: Fine-tune the pre-trained models with a portion of the synthetic dataset, then test on real FER2013 or AffectNet test sets. Observe whether performance improves or degrades on genuine faces.
+Implementation: Freeze most layers initially and train only the final layers with the synthetic data. Gradually unfreeze additional layers if performance stabilizes. Evaluate on real test splits to assess generalization.
+Feature Importance and Saliency Differences (Real vs. Synthetic)
+
+3 Approach: Use interpretability methods (e.g., Grad-CAM, Layer-wise Relevance Propagation) to visualize which regions the model considers most significant for classification in both real and synthetic images.
+Implementation: Generate saliency maps or heatmaps for each class/emotion and compare across domains. Look for consistent facial regions (like eyes, mouth) or anomalies unique to synthetic faces.
+Model Perception Gaps Between Real and Synthetic
+
+4 Approach: Analyze performance discrepancies and misclassifications, and check embeddings or internal representations (e.g., via t-SNE or PCA) to see how real vs. synthetic samples cluster.
+Implementation: Extract penultimate-layer features for both datasets and visualize them. Observe if synthetic data forms distinct clusters, indicating domain-specific artifacts or gaps the model notices.
