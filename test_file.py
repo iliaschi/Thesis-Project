@@ -783,7 +783,7 @@ for model_name in ['enet_b2_7.pt','enet_b0_7.pt']:
                     imgs=[]
 
     if len(imgs)>0:
-        scores = model(torch.stack(imgs, dim=0).to(device))
+        scores = model(torch.stack(imgs, dim=0).to(device)) 
         scores=scores.data.cpu().numpy()
         #print(scores.shape)
         if len(y_scores_val)==0:

@@ -424,3 +424,56 @@ Model Perception Gaps Between Real and Synthetic
 
 4 Approach: Analyze performance discrepancies and misclassifications, and check embeddings or internal representations (e.g., via t-SNE or PCA) to see how real vs. synthetic samples cluster.
 Implementation: Extract penultimate-layer features for both datasets and visualize them. Observe if synthetic data forms distinct clusters, indicating domain-specific artifacts or gaps the model notices.
+
+
+## Image transformation for tensorflow
+```python
+train_transforms = transforms.Compose(
+    [
+        transforms.Resize((IMG_SIZE,IMG_SIZE)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    ]
+)
+
+test_transforms = transforms.Compose(
+    [
+        transforms.Resize((IMG_SIZE,IMG_SIZE)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    ]
+)
+```
+
+# Efficient net loading documentation 
+
+### https://tfimm.readthedocs.io/en/latest/content/efficientnet.html
+
+EfficientNet NoisyStudent models, trained via semi-supervised learning. These models correspond to the tf_... models in timm.
+
+efficientnet_{b0, ..., b7}_ns
+
+efficientnet_l2_ns_475
+
+efficientnet_l2
+
+wil use noisy student model for robustness, paper here https://arxiv.org/abs/1909.03172
+
+good papers for eff net 
+“Our largest model, EfficientNet-L2, needs to be trained for 3.5 days on a Cloud TPU v3 Pod, which has 2048 cores.”
+
+Given the amount of compute used for this, I think that many people won’t be able to replicate and tweak it for further experimentation.
+
+I hope you enjoyed reading this summary!
+nice article : https://medium.com/@nainaakash012/self-training-with-noisy-student-f33640edbab2
+
+tim version timm=0.4.5
+
+References
+https://arxiv.org/pdf/1911.04252.pdf
+https://arxiv.org/pdf/1503.02531.pdf
+https://arxiv.org/pdf/1909.13788.pdf
+https://arxiv.org/pdf/1603.09382.pdf
+https://arxiv.org/pdf/1909.13719.pdf
