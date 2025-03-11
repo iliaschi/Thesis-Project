@@ -223,8 +223,8 @@ class FaceDetector:
 
 def main():
     # Define paths
-    input_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\raw_grids\men\surprised_men'
-    output_dir = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\processed_python\men\surprised_men_proc"
+    input_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\raw_grids\women\surprised_women'
+    output_dir = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\processed_python\women\surprised_women_proc"
     
     # Create detector
     detector = FaceDetector(

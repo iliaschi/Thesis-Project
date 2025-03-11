@@ -28,61 +28,6 @@ import sys
 import collections
 
 
-# def load_pretrained_EfficientNet_B0_NS(weights_path, num_classes, device):
-#     """
-#     Load EfficientNet-B0 model with pretrained weights
-    
-#     Parameters:
-#     -----------
-#     weights_path : str
-#         Path to pretrained model weights
-#     num_classes : int
-#         Number of emotion classes
-#     device : str
-#         Device to load model on ('cpu' or 'cuda')
-    
-#     Returns:
-#     --------
-#     torch.nn.Module
-#         Loaded model
-#     """
-#     try:
-#         # Initialize model
-#         # model = timm.create_model('tf_efficientnet_b0', pretrained=True)
-#         model = torch.load(weights_path, map_location=device)
-#         print(f"Successfully loaded complete model from {weights_path}")
-        
-#         # Replace classifier with custom emotion classifier
-#         # model.classifier = nn.Linear(1280, num_classes)
-#         model.classifier = nn.Sequential(nn.Linear(in_features=1280, out_features=num_classes)) #1792 #1280 #1536
-#         ### VERY important as this is the classifier used in the trained model, usefull to have Sequential
-#         # load it correctly and also to be able to implement dropout and other layers in the future !!! 
-        
-#         # Load weights
-#         checkpoint = torch.load(weights_path, map_location=device)
-        
-#         # Handle different checkpoint formats
-#         if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
-#             model.load_state_dict(checkpoint['state_dict'])
-#         elif isinstance(checkpoint, dict):
-#             model.load_state_dict(checkpoint)
-#         else:
-#             # If it's the entire model
-#             model = checkpoint
-            
-#         print(f"Successfully loaded weights from {weights_path}")
-        
-#         # Set to evaluation mode and move to device
-#         model = model.to(device)
-#         model.eval()
-        
-#         return model
-        
-#     except Exception as e:
-#         print(f"Error loading model: {str(e)}")
-#         raise
-
-
 def load_pretrained_EfficientNet_B0_NS(weights_path, num_classes, device):
     """
     Load EfficientNet-B0 model with pretrained weights
@@ -196,14 +141,14 @@ def evaluate_single_emotion_folder(model, folder_path, class_to_idx, output_dir,
     # Map to standardized emotion name if needed
     emotion_mapping = {
         'angry': 'Angry',
-        'anger': 'Anger',
+        'anger': 'Angry',
         'contempt': 'Contempt',
         'disgust': 'Disgust',
         'fear': 'Fear',
-        'happy': 'Happy',
+        'happy': 'Happiness',
         'happiness': 'Happiness',
         'neutral': 'Neutral',
-        'sad': 'Sad',
+        'sad': 'Sadness',
         'sadness': 'Sadness',
         'surprise': 'Surprise',
         'surprised': 'Surprise'
@@ -400,8 +345,9 @@ def main():
     #new_state_dict_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
     weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
 
-    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test\surprised_1"
-    output_dir = r"C:\Users\ilias\Python\Thesis-Project\results"
+    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\processed_python\women\surprised_women_proc"
+
+    output_dir = r"C:\Users\ilias\Python\Thesis-Project\results_synthetic"
     
     # Define emotion labels explicitly - choose the appropriate one
     # For 7 classes (FER2013)
@@ -417,7 +363,7 @@ def main():
     
     # For 8 classes (AffectNet)
     class_to_idx_8 = {
-        'Anger': 0, 
+        'Angry': 0, 
         'Contempt': 1, 
         'Disgust': 2, 
         'Fear': 3, 
@@ -427,6 +373,8 @@ def main():
         'Surprise': 7
     }
     
+        # Map to standardized emotion name if needed
+
     # Choose which emotion set to use based on model
     class_to_idx = class_to_idx_8  # Change to class_to_idx_8 for 8-class models
     

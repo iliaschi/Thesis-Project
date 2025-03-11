@@ -1,0 +1,66 @@
+{
+    "timestamp": "20250311_205829",
+    "folder": "C:\\Users\\ilias\\Python\\Thesis-Project\\data\\synthetic\\processed_python\\women\\happy_women_proc",
+    "true_emotion": "Happiness",
+    "num_classes": 8,
+    "total_images": 436,
+    "accuracy": 99.77064220183486,
+    "processing_time": 16.076998710632324,
+    "class_to_idx": {
+        "Angry": 0,
+        "Contempt": 1,
+        "Disgust": 2,
+        "Fear": 3,
+        "Happiness": 4,
+        "Neutral": 5,
+        "Sadness": 6,
+        "Surprise": 7
+    },
+    "idx_to_class": {
+        "0": "Angry",
+        "1": "Contempt",
+        "2": "Disgust",
+        "3": "Fear",
+        "4": "Happiness",
+        "5": "Neutral",
+        "6": "Sadness",
+        "7": "Surprise"
+    },
+    "prediction_counts": {
+        "Angry": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Contempt": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Disgust": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Fear": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Happiness": {
+            "count": 435,
+            "percentage": 99.77064220183486
+        },
+        "Neutral": {
+            "count": 1,
+            "percentage": 0.22935779816513763
+        },
+        "Sadness": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Surprise": {
+            "count": 0,
+            "percentage": 0.0
+        }
+    },
+    "mean_confidence": -2.83299175643046,
+    "mean_correct_confidence": -2.846961075136031,
+    "mean_incorrect_confidence": 3.243661880493164
+}

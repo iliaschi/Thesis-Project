@@ -1,0 +1,66 @@
+{
+    "timestamp": "20250311_205442",
+    "folder": "C:\\Users\\ilias\\Python\\Thesis-Project\\data\\synthetic\\processed_python\\men\\surprised_men_proc",
+    "true_emotion": "Surprise",
+    "num_classes": 8,
+    "total_images": 437,
+    "accuracy": 72.76887871853548,
+    "processing_time": 15.972032308578491,
+    "class_to_idx": {
+        "Angry": 0,
+        "Contempt": 1,
+        "Disgust": 2,
+        "Fear": 3,
+        "Happiness": 4,
+        "Neutral": 5,
+        "Sadness": 6,
+        "Surprise": 7
+    },
+    "idx_to_class": {
+        "0": "Angry",
+        "1": "Contempt",
+        "2": "Disgust",
+        "3": "Fear",
+        "4": "Happiness",
+        "5": "Neutral",
+        "6": "Sadness",
+        "7": "Surprise"
+    },
+    "prediction_counts": {
+        "Angry": {
+            "count": 5,
+            "percentage": 1.1441647597254005
+        },
+        "Contempt": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Disgust": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Fear": {
+            "count": 69,
+            "percentage": 15.789473684210526
+        },
+        "Happiness": {
+            "count": 19,
+            "percentage": 4.3478260869565215
+        },
+        "Neutral": {
+            "count": 25,
+            "percentage": 5.720823798627002
+        },
+        "Sadness": {
+            "count": 1,
+            "percentage": 0.2288329519450801
+        },
+        "Surprise": {
+            "count": 318,
+            "percentage": 72.76887871853548
+        }
+    },
+    "mean_confidence": 4.986673185972655,
+    "mean_correct_confidence": 5.221362812714007,
+    "mean_incorrect_confidence": 4.359519393504167
+}
