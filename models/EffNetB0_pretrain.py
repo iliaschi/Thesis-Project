@@ -171,6 +171,30 @@ def compute_classification_report(y_true, y_pred, class_names):
     return report_dict
 
 
+def annotate_false_positives_in_report(report_dict, y_val, y_pred, class_names):
+    """
+    For each class, compute the number of false positives (model predicted class i, but y_val != i).
+    Insert that integer into the 'report_dict[class_name]["false positives"]' field.
+    """
+    y_val = np.array(y_val)
+    y_pred = np.array(y_pred)
+    
+    # For each class 'i' in [0..(len(class_names)-1)]
+    for i, class_name in enumerate(class_names):
+        # false positives => model predicted 'i' but ground truth != i
+        fp_count = np.sum((y_pred == i) & (y_val != i))
+        
+        # Make sure the class is in the report (it usually is if there's support>0)
+        # But if scikit-learn skipped it due to no support, we might create it
+        if class_name not in report_dict:
+            report_dict[class_name] = {}
+        
+        # Set the field
+        report_dict[class_name]["false positives"] = int(fp_count)
+    
+    return report_dict
+
+
 def evaluate_single_emotion_folder(model, folder_path, class_to_idx, output_dir, device, batch_size=32, img_size=224):
     """
     Evaluate model on a single emotion folder
@@ -202,6 +226,14 @@ def evaluate_single_emotion_folder(model, folder_path, class_to_idx, output_dir,
     folder_name = os.path.basename(folder_path)
     result_dir = os.path.join(output_dir, f"evaluation_{folder_name}_{timestamp}")
     os.makedirs(result_dir, exist_ok=True)
+
+    #     # 1) create custom folder name
+    # parent_folder = os.path.basename(os.path.dirname(folder_path))  # e.g. 'test'
+    # timestamp = datetime.now().strftime("%Y%m%d")
+    # folder_name = os.path.basename(folder_path)
+    # custom_name = f"{parent_folder}_results_{timestamp}_evaluation"
+    # result_dir = os.path.join(output_dir, custom_name)
+    # os.makedirs(result_dir, exist_ok=True)
     
     # Extract true emotion from folder name
     # Expects folder name like 'angry_6' or 'happy_2'
@@ -342,6 +374,7 @@ def evaluate_single_emotion_folder(model, folder_path, class_to_idx, output_dir,
     # (1) Classification report
     class_names = list(idx_to_class.values())
     report_dict = compute_classification_report(y_val, y_pred, class_names)
+    report_dict = annotate_false_positives_in_report(report_dict, y_val, y_pred, class_names) # false positives
     with open(os.path.join(result_dir, "classification_report.json"), 'w') as f:
         json.dump(report_dict, f, indent=4)
     
@@ -379,6 +412,34 @@ def evaluate_single_emotion_folder(model, folder_path, class_to_idx, output_dir,
                 result[prob_key] = float(y_scores_val[i, cls_idx])
         
         results.append(result)
+
+    # False Positives Addition
+    # --- Step 4: figure out false positives
+    false_positives = []
+    for row in results:
+        if not row['correct']:
+            false_positives.append({
+                'file': row['file'],
+                'predicted_emotion': row['predicted_emotion'],
+                'true_emotion': row['true_emotion'],
+                # etc.
+            })
+
+    # # --- Step 5: classification report
+    # class_names = list(idx_to_class.values())
+    # report_dict = compute_classification_report(y_val, y_pred, class_names)
+
+    # # --- Step 6: attach false positives
+    # report_dict['false_positives'] = false_positives
+
+    # # --- Step 7: write out
+    # cr_json_path = os.path.join(result_dir, 'classification_report.json')
+    # with open(cr_json_path, 'w') as f:
+    #     json.dump(report_dict, f, indent=4)
+    # # if false_positives:
+    # #     fp_df = pd.DataFrame(false_positives)
+    # #     fp_csv = os.path.join(result_dir, 'false_positives.csv')
+    # #     fp_df.to_csv(fp_csv, index=False)
     
     # Save results to CSV
     results_df = pd.DataFrame(results)
@@ -435,13 +496,7 @@ def main():
     #new_state_dict_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
     weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
 
-    #C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test\happy_4
-    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test\happy_4"
 
-    output_dir = r"C:\Users\ilias\Python\Thesis-Project\results\Results_2.0"
-    
-    # Define emotion labels explicitly - choose the appropriate one
-    
     # For 8 classes (AffectNet)
     class_to_idx_8 = {
         'Angry': 0, 
@@ -452,9 +507,8 @@ def main():
         'Neutral': 5, 
         'Sadness': 6, 
         'Surprise': 7
-    }
-    
-        # Map to standardized emotion name if needed
+    }   # Map to standardized emotion name if needed
+
 
     # Choose which emotion set to use based on model
     class_to_idx = class_to_idx_8  # Change to class_to_idx_8 for 8-class models
@@ -475,8 +529,20 @@ def main():
         device=device
     )
 
+    base_output_dir = r"C:\Users\ilias\Python\Thesis-Project\results\Results_2.0"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    custom_folder_name = f"RAFDB_results_{timestamp}"
 
+    output_dir = os.path.join(base_output_dir, custom_folder_name)
+    os.makedirs(output_dir, exist_ok=True)
+
+    #C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test\happy_4
+    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
     test_root = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
+
+    
+    # Define emotion labels explicitly - choose the appropriate one
+
     for folder_name in os.listdir(test_root):
         folder_path = os.path.join(test_root, folder_name)
         if os.path.isdir(folder_path):
@@ -492,16 +558,6 @@ def main():
             print(f"Done with {folder_name}, results in: {result_dir}")
 
 
-    # # Evaluate folder
-    # result_dir, accuracy, y_pred, y_val, y_scores = evaluate_single_emotion_folder(
-    #     model=model,
-    #     folder_path=folder_path,
-    #     class_to_idx=class_to_idx,
-    #     output_dir=output_dir,
-    #     device=device,
-    #     batch_size=32,
-    #     img_size=img_size
-    # )
     
     print(f"Results saved to: {result_dir}")
 
