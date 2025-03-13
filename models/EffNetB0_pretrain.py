@@ -14,18 +14,20 @@ import torch.nn as nn
 import timm
 import pandas as pd
 import numpy as np
-# import matplotlib.pyplot as plt
-# import seaborn as sns
+import matplotlib.pyplot as plt
+import seaborn as sns
 from torchvision import transforms
 from PIL import Image
 from tqdm import tqdm
-# from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix
 import time
 import json
 import re
 from datetime import datetime
 import sys
 import collections
+import torch.nn.functional as F
+
 
 
 def load_pretrained_EfficientNet_B0_NS(weights_path, num_classes, device):
@@ -74,7 +76,7 @@ def load_pretrained_EfficientNet_B0_NS(weights_path, num_classes, device):
         return model
         
     except Exception as e:
-        print(f"Error loading model: {str(e)}")
+        print(f"----- Error loading model: {str(e)} -----")
         raise
 
 
@@ -100,6 +102,74 @@ def get_preprocessing_transform(img_size=224):
             std=[0.229, 0.224, 0.225]
         )
     ])
+
+
+def plot_confusion_matrix_single(y_true, y_pred, class_names, out_path):
+    """
+    Plots and saves a confusion matrix for the given predictions,
+    focusing on the distribution among all classes for this single folder.
+    """
+    cm = confusion_matrix(y_true, y_pred, labels=range(len(class_names)))
+    fig, ax = plt.subplots(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt='d', xticklabels=class_names, yticklabels=class_names, ax=ax)
+    plt.title('Confusion Matrix')
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.tight_layout()
+    plt.savefig(out_path)
+    plt.close()
+
+
+from sklearn.calibration import calibration_curve
+import matplotlib.pyplot as plt
+
+def plot_reliability_diagram(y_true, raw_logits, out_path, n_bins=10):
+    # raw_logits shape: (N, num_classes)
+    # y_true shape: (N,) with class indices
+    # 1) convert to probabilities via softmax
+    logits_tensor = torch.from_numpy(raw_logits)
+    prob_tensor = F.softmax(logits_tensor, dim=1)
+    prob_array = prob_tensor.numpy()  # shape (N, num_classes)
+
+    # 2) for each sample, pick the probability assigned to its ground-truth class
+    correct_probs = []
+    correct_or_not = []
+    for i in range(len(y_true)):
+        gt_class = y_true[i]
+        p = prob_array[i, gt_class]  # prob assigned to the actual class
+        correct_probs.append(p)
+        correct_or_not.append(1 if gt_class == np.argmax(prob_array[i]) else 0)
+
+    # 3) calibration_curve
+    from sklearn.calibration import calibration_curve
+    import matplotlib.pyplot as plt
+
+    prob_true, prob_pred = calibration_curve(correct_or_not, correct_probs, n_bins=n_bins)
+    
+    plt.figure()
+    plt.plot(prob_pred, prob_true, marker='o', label='Model')
+    plt.plot([0,1],[0,1], '--', color='gray', label='Perfectly calibrated')
+    plt.xlabel('Predicted Probability')
+    plt.ylabel('True Probability')
+    plt.title('Reliability Diagram')
+    plt.legend()
+    plt.savefig(out_path)
+    plt.close()
+
+
+def compute_classification_report(y_true, y_pred, class_names):
+    # Force classification_report to handle all classes from 0..7, 
+    # ignoring any zero-division issues.
+    report_dict = classification_report(
+        y_true,
+        y_pred,
+        labels=range(len(class_names)),   # e.g. [0,1,2,3,4,5,6,7]
+        target_names=class_names,
+        zero_division=0,
+        output_dict=True
+    )
+    return report_dict
+
 
 def evaluate_single_emotion_folder(model, folder_path, class_to_idx, output_dir, device, batch_size=32, img_size=224):
     """
@@ -266,6 +336,26 @@ def evaluate_single_emotion_folder(model, folder_path, class_to_idx, output_dir,
     correct = (y_val == y_pred)
     accuracy = 100.0 * correct.sum() / len(y_val)
     
+
+    ##### Extra Metrics
+        # After computing y_pred, y_val
+    # (1) Classification report
+    class_names = list(idx_to_class.values())
+    report_dict = compute_classification_report(y_val, y_pred, class_names)
+    with open(os.path.join(result_dir, "classification_report.json"), 'w') as f:
+        json.dump(report_dict, f, indent=4)
+    
+    # (2) Single confusion matrix
+    cm_path = os.path.join(result_dir, "single_confusion_matrix.png")
+    plot_confusion_matrix_single(y_val, y_pred, class_names, cm_path)
+    
+    # (3) Reliability diagram example
+    # Build correct_or_not, correct_probs
+    correct_or_not = (y_pred == y_val).astype(int)
+    correct_probs  = [y_scores_val[i, y_val[i]] for i in range(len(y_val))]
+    rel_path = os.path.join(result_dir, "reliability_diagram.png")
+    plot_reliability_diagram(y_val, y_scores_val, rel_path, n_bins=10)
+
     print(f"Accuracy for {true_emotion}: {accuracy:.2f}%, total samples: {len(y_val)}")
     
     # Create detailed results
@@ -345,21 +435,12 @@ def main():
     #new_state_dict_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
     weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
 
-    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\processed_python\women\surprised_women_proc"
+    #C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test\happy_4
+    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test\happy_4"
 
-    output_dir = r"C:\Users\ilias\Python\Thesis-Project\results_synthetic"
+    output_dir = r"C:\Users\ilias\Python\Thesis-Project\results\Results_2.0"
     
     # Define emotion labels explicitly - choose the appropriate one
-    # For 7 classes (FER2013)
-    class_to_idx_7 = {
-        'Angry': 0, 
-        'Disgust': 1, 
-        'Fear': 2, 
-        'Happy': 3, 
-        'Sad': 4, 
-        'Surprise': 5, 
-        'Neutral': 6
-    }
     
     # For 8 classes (AffectNet)
     class_to_idx_8 = {
@@ -393,17 +474,34 @@ def main():
         num_classes=len(class_to_idx),
         device=device
     )
-    
-    # Evaluate folder
-    result_dir, accuracy, y_pred, y_val, y_scores = evaluate_single_emotion_folder(
-        model=model,
-        folder_path=folder_path,
-        class_to_idx=class_to_idx,
-        output_dir=output_dir,
-        device=device,
-        batch_size=32,
-        img_size=img_size
-    )
+
+
+    test_root = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
+    for folder_name in os.listdir(test_root):
+        folder_path = os.path.join(test_root, folder_name)
+        if os.path.isdir(folder_path):
+            result_dir, accuracy, _, _, _ = evaluate_single_emotion_folder(
+                model=model,
+                folder_path=folder_path,
+                class_to_idx=class_to_idx,
+                output_dir=output_dir,
+                device=device,
+                batch_size=32,
+                img_size=img_size
+            )
+            print(f"Done with {folder_name}, results in: {result_dir}")
+
+
+    # # Evaluate folder
+    # result_dir, accuracy, y_pred, y_val, y_scores = evaluate_single_emotion_folder(
+    #     model=model,
+    #     folder_path=folder_path,
+    #     class_to_idx=class_to_idx,
+    #     output_dir=output_dir,
+    #     device=device,
+    #     batch_size=32,
+    #     img_size=img_size
+    # )
     
     print(f"Results saved to: {result_dir}")
 
@@ -412,160 +510,3 @@ if __name__ == "__main__":
 
 
 
-
-###### old version
-
-# # -----------------------------------------------------------------------------
-# # Model Definition: EfficientNet-B0
-# # -----------------------------------------------------------------------------
-
-# def create_efficientnet_model(weights_path=None, num_classes=7, device='cpu'):
-#     """
-#     Create EfficientNet-B0 model for Facial Emotion Recognition
-    
-#     Parameters:
-#     -----------
-#     weights_path : str
-#         Path to pretrained weights file
-#     num_classes : int
-#         Number of emotion classes (default: 7)
-#     device : str
-#         Device to load the model on ('cpu' or 'cuda')
-    
-#     Returns:
-#     --------
-#     torch.nn.Module
-#         Loaded EfficientNet model
-#     """
-#     # Initialize model
-#     model = timm.create_model('tf_efficientnet_b0', pretrained=False)
-    
-#     # Replace classifier with custom emotion classifier
-#     model.classifier = nn.Linear(1280, num_classes)
-    
-#     # Load custom weights if provided
-#     if weights_path and os.path.exists(weights_path):
-#         try:
-#             # Load weights with compatibility handling
-#             weights = torch.load(weights_path, map_location=device)
-            
-#             # Handle different weight formats
-#             if isinstance(weights, dict) and 'state_dict' in weights:
-#                 model.load_state_dict(weights['state_dict'])
-#             elif isinstance(weights, dict):
-#                 model.load_state_dict(weights)
-#             else:
-#                 # If it's the entire model
-#                 model = weights
-                
-#             print(f"Successfully loaded weights from {weights_path}")
-#         except Exception as e:
-#             print(f"Error loading weights: {str(e)}")
-    
-#     # Set to evaluation mode and move to device
-#     model = model.to(device)
-#     model.eval()
-    
-#     return model
-
-# # -----------------------------------------------------------------------------
-# # Image Preprocessing for Model Input
-# # -----------------------------------------------------------------------------
-
-# def get_preprocessing_transform():
-#     """Get image preprocessing pipeline for EfficientNet-B0"""
-#     return transforms.Compose([
-#         transforms.Resize((224, 224)),  # EfficientNet-B0 input size
-#         transforms.ToTensor(),          # Convert to tensor (0-1 range)
-#         transforms.Normalize(
-#             mean=[0.485, 0.456, 0.406], # ImageNet mean
-#             std=[0.229, 0.224, 0.225]   # ImageNet std
-#         )
-#     ])
-
-# def preprocess_image(image_path, transform=None):
-#     """Preprocess a single image for model input"""
-#     if transform is None:
-#         transform = get_preprocessing_transform()
-        
-#     # Load and convert image to RGB
-#     image = Image.open(image_path).convert('RGB')
-    
-#     # Apply transformations and add batch dimension
-#     image_tensor = transform(image).unsqueeze(0)
-    
-#     return image_tensor
-
-# # -----------------------------------------------------------------------------
-# # Emotion Prediction
-# # -----------------------------------------------------------------------------
-
-# def predict_emotion(model, image_tensor, device='cpu'):
-#     """Predict emotion for a preprocessed image tensor"""
-#     # Emotion mapping
-#     emotions = {
-#         0: 'Angry',
-#         1: 'Disgust',
-#         2: 'Fear',
-#         3: 'Happy',
-#         4: 'Sad', 
-#         5: 'Surprise',
-#         6: 'Neutral'
-#     }
-    
-#     # Move tensor to device
-#     image_tensor = image_tensor.to(device)
-    
-#     # Perform inference
-#     with torch.no_grad():
-#         outputs = model(image_tensor)
-#         probabilities = torch.softmax(outputs, dim=1)[0]
-#         predicted_class = torch.argmax(probabilities).item()
-#         confidence = probabilities[predicted_class].item()
-    
-#     # Return prediction details
-#     return {
-#         'emotion': emotions[predicted_class],
-#         'class_idx': predicted_class,
-#         'confidence': confidence,
-#         'probabilities': probabilities.cpu().numpy()
-#     }
-
-# # -----------------------------------------------------------------------------
-# # Results Saving
-# # -----------------------------------------------------------------------------
-
-# def save_predictions_to_csv(results, output_path, include_summary=True):
-#     """Save prediction results to CSV file"""
-#     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    
-#     # Calculate simple accuracy for summary
-#     if include_summary and results:
-#         correct = sum(1 for r in results if r.get('correct', False))
-#         accuracy = correct / len(results)
-#     else:
-#         accuracy = 0
-    
-#     with open(output_path, 'w', newline='') as f:
-#         # Write header with summary if requested
-#         if include_summary:
-#             writer = csv.writer(f)
-#             writer.writerow(['Evaluation Results'])
-#             writer.writerow([f'Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'])
-#             writer.writerow([f'Accuracy: {accuracy:.4f}'])
-#             writer.writerow([f'Total Images: {len(results)}'])
-#             writer.writerow([])  # Empty row
-        
-#         # Create CSV writer for results
-#         fieldnames = ['file', 'true_emotion', 'predicted_emotion', 
-#                      'confidence', 'correct', 'class_idx']
-        
-#         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
-#         writer.writeheader()
-        
-#         # Write each result
-#         for result in results:
-#             writer.writerow(result)
-    
-#     print(f"Results saved to: {output_path}")
-#     return output_path

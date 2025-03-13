@@ -1,13 +1,13 @@
 {
-    "timestamp": "20250309_150105",
+    "timestamp": "20250313_143415",
     "folder": "C:\\Users\\ilias\\Python\\Thesis-Project\\data\\real\\RAF_DB\\DATASET\\test\\happy_4",
-    "true_emotion": "Happy",
+    "true_emotion": "Happiness",
     "num_classes": 8,
     "total_images": 1185,
-    "accuracy": 0.0,
-    "processing_time": 43.39166259765625,
+    "accuracy": 83.96624472573839,
+    "processing_time": 16.59786629676819,
     "class_to_idx": {
-        "Anger": 0,
+        "Angry": 0,
         "Contempt": 1,
         "Disgust": 2,
         "Fear": 3,
@@ -17,7 +17,7 @@
         "Surprise": 7
     },
     "idx_to_class": {
-        "0": "Anger",
+        "0": "Angry",
         "1": "Contempt",
         "2": "Disgust",
         "3": "Fear",
@@ -27,7 +27,7 @@
         "7": "Surprise"
     },
     "prediction_counts": {
-        "Anger": {
+        "Angry": {
             "count": 18,
             "percentage": 1.518987341772152
         },
@@ -60,7 +60,7 @@
             "percentage": 1.518987341772152
         }
     },
-    "mean_confidence": 1.7062870801626882,
-    "mean_correct_confidence": 0.0,
-    "mean_incorrect_confidence": 1.7062870801626882
+    "mean_confidence": 1.7062876603082766,
+    "mean_correct_confidence": 1.5280647032524473,
+    "mean_incorrect_confidence": 2.6396131459427505
 }
