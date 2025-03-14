@@ -26,7 +26,7 @@ from sklearn.metrics import confusion_matrix
 import pandas as pd
 
 import random
-
+import collections
 
 #######################
 # 1) Configuration
@@ -38,19 +38,19 @@ TEST_DIR  = os.path.join(BASE_SYNTH_DIR, "synth_test")
 
 # A path to your existing pretrained EfficientNet weights (as a state_dict).
 PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
-SAVE_FINETUNED_MODEL = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_efficientnet_b0_finetuned.pt"
+SAVE_FINETUNED_MODEL = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_efficientnet_b0_finetuned_test_cuda_10.pt"
 
 # Basic training hyperparameters
 IMG_SIZE       = 224
 NUM_CLASSES    = 8
 BATCH_SIZE     = 32
 LEARNING_RATE  = 1e-4
-EPOCHS         = 3
+EPOCHS         = 10
 DEVICE         = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # Fraction of the training dataset to use, e.g. 0.1 => 10%
-TRAIN_FRACTION  = 0.01
+TRAIN_FRACTION  = 0.5
 
 
 ##############################
@@ -86,25 +86,62 @@ def subset_dataset(full_dataset, fraction=1.0):
 ##############################
 # CREATE MODEL
 ##############################
-def create_efficientnet_b0(num_classes, pretrained_weight_path=None):
+# def create_efficientnet_b0(num_classes, pretrained_weight_path=None):
+#     """
+#     Create an EfficientNet-B0 from timm, optionally load an external state_dict,
+#     and replace the final classifier to match 'num_classes'.
+#     """
+#     model = timm.create_model('tf_efficientnet_b0', pretrained=False)
+    
+#     # If you have external weights, load them
+#     if pretrained_weight_path is not None and os.path.exists(pretrained_weight_path):
+#         state_dict = torch.load(pretrained_weight_path, map_location="cpu")
+#         model.load_state_dict(state_dict, strict=True)
+#         print(f"[INFO] Loaded external pretrained state_dict: {pretrained_weight_path}")
+#     else:
+#         print("[WARNING] No external weights loaded (or path doesn't exist).")
+    
+    
+#     model.classifier = nn.Sequential(nn.Linear(1280, num_classes))
+#     # Replace classifier with a new linear layer for your emotion classes
+#     # model.classifier = nn.Sequential(nn.Linear(in_features=1280, out_features=num_classes)) # old
+#     return model
+
+def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
     """
-    Create an EfficientNet-B0 from timm, optionally load an external state_dict,
-    and replace the final classifier to match 'num_classes'.
+    Unified approach that sets up the classifier layer,
+    then attempts to load either a state dict or a full model object
+    if 'weights_path' is given.
     """
+    # Step 1: create baseline model
     model = timm.create_model('tf_efficientnet_b0', pretrained=False)
     
-    # If you have external weights, load them
-    if pretrained_weight_path is not None and os.path.exists(pretrained_weight_path):
-        state_dict = torch.load(pretrained_weight_path, map_location="cpu")
-        model.load_state_dict(state_dict, strict=False)
-        print(f"[INFO] Loaded external pretrained state_dict: {pretrained_weight_path}")
-    else:
-        print("[WARNING] No external weights loaded (or path doesn't exist).")
+    # Step 2: define the final classifier EXACTLY as in your testing code
+    model.classifier = nn.Sequential(nn.Linear(1280, num_classes))
     
-    # Replace classifier with a new linear layer for your emotion classes
-    model.classifier = nn.Sequential(
-        nn.Linear(in_features=1280, out_features=num_classes)
-    )
+    # Step 3: if we have a weights_path, check if it’s a state dict or full model
+    if weights_path is not None and len(weights_path) > 0:
+        try:
+            checkpoint = torch.load(weights_path, map_location=map_location)
+            print(f"[INFO] Loaded checkpoint from {weights_path}")
+            
+            if isinstance(checkpoint, collections.OrderedDict):
+                # It's already a pure state dict
+                model.load_state_dict(checkpoint, strict=True)
+                print("[INFO] Loaded pure state_dict directly.")
+            else:
+                # Possibly a full model or something else
+                # e.g. checkpoint might have .state_dict()
+                if hasattr(checkpoint, 'state_dict'):
+                    model.load_state_dict(checkpoint.state_dict(), strict=True)
+                    print("[INFO] Extracted state_dict from entire model object.")
+                else:
+                    print("[WARNING] checkpoint is neither an OrderedDict nor a full model with state_dict. Skipping load.")
+        except Exception as e:
+            print(f"[ERROR] Could not load {weights_path}: {str(e)}")
+    else:
+        print("[WARNING] No weights_path provided or file does not exist. Starting from scratch.")
+    
     return model
 
 
@@ -143,6 +180,10 @@ def train_model(model, train_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_R
 
     print("[INFO] Finished training (no validation used here).")
 
+    # Save just the state_dict (recommended)
+    torch.save(model.state_dict(), SAVE_FINETUNED_MODEL)
+    print("[INFO] Saved fine-tuned model state_dict to 'my_finetuned_model_state_dict.pth'")
+
 
 ##############################
 # MAIN
@@ -166,8 +207,12 @@ def main():
                                                num_workers=4)
     
     # Create model
-    model = create_efficientnet_b0(num_classes=NUM_CLASSES,
-                                   pretrained_weight_path=PRETRAINED_WEIGHTS)
+    # model = create_efficientnet_b0(num_classes=NUM_CLASSES,pretrained_weight_path=PRETRAINED_WEIGHTS)
+    
+
+        # 2) Create the model with the same approach used in testing
+    model = create_efficientnet_b0(num_classes = NUM_CLASSES, weights_path = PRETRAINED_WEIGHTS, map_location="cpu")
+
     model.to(DEVICE)
     
     # Simple training

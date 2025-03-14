@@ -1,0 +1,66 @@
+{
+    "timestamp": "20250314_020702",
+    "folder": "C:\\Users\\ilias\\Python\\Thesis-Project\\data\\synthetic\\synth_test\\Happiness",
+    "true_emotion": "Happiness",
+    "num_classes": 8,
+    "total_images": 73,
+    "accuracy": 100.0,
+    "processing_time": 1.1091032028198242,
+    "class_to_idx": {
+        "Angry": 0,
+        "Contempt": 1,
+        "Disgust": 2,
+        "Fear": 3,
+        "Happiness": 4,
+        "Neutral": 5,
+        "Sadness": 6,
+        "Surprise": 7
+    },
+    "idx_to_class": {
+        "0": "Angry",
+        "1": "Contempt",
+        "2": "Disgust",
+        "3": "Fear",
+        "4": "Happiness",
+        "5": "Neutral",
+        "6": "Sadness",
+        "7": "Surprise"
+    },
+    "prediction_counts": {
+        "Angry": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Contempt": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Disgust": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Fear": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Happiness": {
+            "count": 73,
+            "percentage": 100.0
+        },
+        "Neutral": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Sadness": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Surprise": {
+            "count": 0,
+            "percentage": 0.0
+        }
+    },
+    "mean_confidence": -1.135115039675203,
+    "mean_correct_confidence": -1.135115039675203,
+    "mean_incorrect_confidence": 0.0
+}

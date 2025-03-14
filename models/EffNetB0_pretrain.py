@@ -8,25 +8,19 @@ from PIL import Image
 import csv
 from datetime import datetime
 
-import os
-import torch
-import torch.nn as nn
-import timm
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from torchvision import transforms
-from PIL import Image
 from tqdm import tqdm
 from sklearn.metrics import classification_report, confusion_matrix
 import time
 import json
 import re
-from datetime import datetime
 import sys
 import collections
 import torch.nn.functional as F
+from sklearn.calibration import calibration_curve
 
 
 
@@ -104,24 +98,38 @@ def get_preprocessing_transform(img_size=224):
     ])
 
 
+
+
 def plot_confusion_matrix_single(y_true, y_pred, class_names, out_path):
     """
     Plots and saves a confusion matrix for the given predictions,
     focusing on the distribution among all classes for this single folder.
+    Uses a blue color map for the heatmap.
     """
+    # Create the confusion matrix
     cm = confusion_matrix(y_true, y_pred, labels=range(len(class_names)))
+    
+    # Plot the confusion matrix
     fig, ax = plt.subplots(figsize=(6, 5))
-    sns.heatmap(cm, annot=True, fmt='d', xticklabels=class_names, yticklabels=class_names, ax=ax)
-    plt.title('Confusion Matrix')
+    sns.heatmap(
+        cm, 
+        annot=True,       # Show numbers in each cell
+        fmt='d',          # Integer formatting
+        xticklabels=class_names, 
+        yticklabels=class_names, 
+        ax=ax,
+        cmap='Blues'      # Blue color map
+    )
+    plt.title('Confusion Matrix (Blue)')
     plt.xlabel('Predicted')
     plt.ylabel('True')
     plt.tight_layout()
+    
+    # Save to file
     plt.savefig(out_path)
     plt.close()
+    print(f"[INFO] Confusion matrix saved to: {out_path}")
 
-
-from sklearn.calibration import calibration_curve
-import matplotlib.pyplot as plt
 
 def plot_reliability_diagram(y_true, raw_logits, out_path, n_bins=10):
     # raw_logits shape: (N, num_classes)
@@ -226,14 +234,6 @@ def evaluate_single_emotion_folder(model, folder_path, class_to_idx, output_dir,
     folder_name = os.path.basename(folder_path)
     result_dir = os.path.join(output_dir, f"evaluation_{folder_name}_{timestamp}")
     os.makedirs(result_dir, exist_ok=True)
-
-    #     # 1) create custom folder name
-    # parent_folder = os.path.basename(os.path.dirname(folder_path))  # e.g. 'test'
-    # timestamp = datetime.now().strftime("%Y%m%d")
-    # folder_name = os.path.basename(folder_path)
-    # custom_name = f"{parent_folder}_results_{timestamp}_evaluation"
-    # result_dir = os.path.join(output_dir, custom_name)
-    # os.makedirs(result_dir, exist_ok=True)
     
     # Extract true emotion from folder name
     # Expects folder name like 'angry_6' or 'happy_2'
@@ -494,7 +494,14 @@ def main():
     # Configuration
     # weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew.pt"
     #new_state_dict_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
-    weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
+    
+
+    #weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth" # Trained on Affect Net
+
+
+    # A path to your existing pretrained EfficientNet weights (as a state_dict).
+    #PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
+    weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_efficientnet_b0_finetuned_test_cuda.pt" # Finetuned on Synthetic
 
 
     # For 8 classes (AffectNet)
@@ -531,16 +538,20 @@ def main():
 
     base_output_dir = r"C:\Users\ilias\Python\Thesis-Project\results\Results_2.0"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    custom_folder_name = f"RAFDB_results_{timestamp}"
+    custom_folder_name = f"finetuned_3_results_{timestamp}"
 
     output_dir = os.path.join(base_output_dir, custom_folder_name)
     os.makedirs(output_dir, exist_ok=True)
 
     #C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test\happy_4
-    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
+    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test" # real
     test_root = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
 
     
+    #synthetic
+    # folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_test"
+    # test_root = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_test"
+
     # Define emotion labels explicitly - choose the appropriate one
 
     for folder_name in os.listdir(test_root):
