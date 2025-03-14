@@ -1,0 +1,71 @@
+{
+    "Angry": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0,
+        "false positives": 32
+    },
+    "Contempt": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0,
+        "false positives": 46
+    },
+    "Disgust": {
+        "precision": 1.0,
+        "recall": 0.6397058823529411,
+        "f1-score": 0.7802690582959642,
+        "support": 408.0,
+        "false positives": 0
+    },
+    "Fear": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0,
+        "false positives": 11
+    },
+    "Happiness": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0,
+        "false positives": 3
+    },
+    "Neutral": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0,
+        "false positives": 20
+    },
+    "Sadness": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0,
+        "false positives": 27
+    },
+    "Surprise": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0,
+        "false positives": 8
+    },
+    "accuracy": 0.6397058823529411,
+    "macro avg": {
+        "precision": 0.125,
+        "recall": 0.07996323529411764,
+        "f1-score": 0.09753363228699552,
+        "support": 408.0
+    },
+    "weighted avg": {
+        "precision": 1.0,
+        "recall": 0.6397058823529411,
+        "f1-score": 0.7802690582959642,
+        "support": 408.0
+    }
+}

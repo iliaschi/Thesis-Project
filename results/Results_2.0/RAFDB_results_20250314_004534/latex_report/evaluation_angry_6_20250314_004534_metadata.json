@@ -1,0 +1,66 @@
+{
+    "timestamp": "20250314_004534",
+    "folder": "C:\\Users\\ilias\\Python\\Thesis-Project\\data\\real\\RAF_DB\\DATASET\\test\\angry_6",
+    "true_emotion": "Angry",
+    "num_classes": 8,
+    "total_images": 434,
+    "accuracy": 79.95391705069125,
+    "processing_time": 4.953324317932129,
+    "class_to_idx": {
+        "Angry": 0,
+        "Contempt": 1,
+        "Disgust": 2,
+        "Fear": 3,
+        "Happiness": 4,
+        "Neutral": 5,
+        "Sadness": 6,
+        "Surprise": 7
+    },
+    "idx_to_class": {
+        "0": "Angry",
+        "1": "Contempt",
+        "2": "Disgust",
+        "3": "Fear",
+        "4": "Happiness",
+        "5": "Neutral",
+        "6": "Sadness",
+        "7": "Surprise"
+    },
+    "prediction_counts": {
+        "Angry": {
+            "count": 347,
+            "percentage": 79.95391705069125
+        },
+        "Contempt": {
+            "count": 0,
+            "percentage": 0.0
+        },
+        "Disgust": {
+            "count": 22,
+            "percentage": 5.0691244239631335
+        },
+        "Fear": {
+            "count": 30,
+            "percentage": 6.912442396313364
+        },
+        "Happiness": {
+            "count": 21,
+            "percentage": 4.838709677419355
+        },
+        "Neutral": {
+            "count": 3,
+            "percentage": 0.6912442396313364
+        },
+        "Sadness": {
+            "count": 9,
+            "percentage": 2.0737327188940093
+        },
+        "Surprise": {
+            "count": 2,
+            "percentage": 0.4608294930875576
+        }
+    },
+    "mean_confidence": 4.786187664773058,
+    "mean_correct_confidence": 5.1773621620293655,
+    "mean_incorrect_confidence": 3.2259859343369803
+}

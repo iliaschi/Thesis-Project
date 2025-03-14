@@ -501,7 +501,7 @@ def main():
 
     # A path to your existing pretrained EfficientNet weights (as a state_dict).
     #PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
-    weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_efficientnet_b0_finetuned_test_cuda.pt" # Finetuned on Synthetic
+    weights_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_efficientnet_b0_finetuned_test_cuda_10.pt" # Finetuned on Synthetic
 
 
     # For 8 classes (AffectNet)
@@ -538,19 +538,19 @@ def main():
 
     base_output_dir = r"C:\Users\ilias\Python\Thesis-Project\results\Results_2.0"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    custom_folder_name = f"finetuned_3_results_{timestamp}"
+    custom_folder_name = f"synth_finetuned_3_results_{timestamp}"
 
     output_dir = os.path.join(base_output_dir, custom_folder_name)
     os.makedirs(output_dir, exist_ok=True)
 
     #C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test\happy_4
-    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test" # real
-    test_root = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
+    # folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test" # real
+    # test_root = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
 
     
     #synthetic
-    # folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_test"
-    # test_root = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_test"
+    folder_path = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_test"
+    test_root = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_test"
 
     # Define emotion labels explicitly - choose the appropriate one
 
