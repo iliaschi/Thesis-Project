@@ -221,29 +221,74 @@ class FaceDetector:
         
         self.logger.info(f"Summary report saved to: {report_path}")
 
+
+import os
+import torch
+
 def main():
-    # Define paths
-    input_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\raw_grids\women\surprised_women'
-    output_dir = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\processed_python\women\surprised_women_proc"
-    
+    # Define base directories
+    input_base_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\raw_grids'
+    output_base_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\processed_python_2.0'
+
     # Create detector
     detector = FaceDetector(
         min_face_size=80,
-        confidence_threshold=0.8,  # Slightly lower threshold for testing
-        device='cuda' if torch.cuda.is_available() else 'cpu'
+        confidence_threshold=0.9,
+        device='cpu'#cuda' if torch.cuda.is_available() else 'cpu'
     )
-    
-    # Process all images
-    stats = detector.process_with_report(input_dir, output_dir)
-    
-    # Print summary
-    print(f"\nProcessing Complete!")
-    print(f"Total Images: {stats['total_images']}")
-    print(f"Total Faces: {stats['high_confidence_faces'] + stats['low_confidence_faces']}") 
-    print(f"High Confidence Faces: {stats['high_confidence_faces']}")
-    print(f"Processing Time: {stats['processing_time']:.2f} seconds")
+
+    # Walk through all subdirectories inside raw_grids/
+    for root, dirs, files in os.walk(input_base_dir):
+        if not files:  # Skip empty folders
+            continue
+
+        # Define the relative subfolder path
+        relative_path = os.path.relpath(root, input_base_dir)
+        
+        # Define the corresponding output directory
+        output_dir = os.path.join(output_base_dir, relative_path)
+
+        # Ensure the output directory exists
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Process all images in the current folder
+        print(f"\nProcessing: {root} --> Saving to: {output_dir}")
+        stats = detector.process_with_report(root, output_dir)
+
+        # Print summary for this folder
+        print(f"Completed: {relative_path}")
+        print(f"Total Images: {stats['total_images']}")
+        print(f"Total Faces: {stats['high_confidence_faces'] + stats['low_confidence_faces']}") 
+        print(f"High Confidence Faces: {stats['high_confidence_faces']}")
+        print(f"Processing Time: {stats['processing_time']:.2f} seconds")
 
 if __name__ == "__main__":
     main()
+
+
+# def main():
+#     # Define paths
+#     input_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\raw_grids\women\surprised_women'
+#     output_dir = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\processed_python\women\surprised_women_proc"
+    
+#     # Create detector
+#     detector = FaceDetector(
+#         min_face_size=80,
+#         confidence_threshold=0.9,  # Slightly lower threshold for testing
+#         device='cuda' if torch.cuda.is_available() else 'cpu'
+#     )
+    
+#     # Process all images
+#     stats = detector.process_with_report(input_dir, output_dir)
+    
+#     # Print summary
+#     print(f"\nProcessing Complete!")
+#     print(f"Total Images: {stats['total_images']}")
+#     print(f"Total Faces: {stats['high_confidence_faces'] + stats['low_confidence_faces']}") 
+#     print(f"High Confidence Faces: {stats['high_confidence_faces']}")
+#     print(f"Processing Time: {stats['processing_time']:.2f} seconds")
+
+# if __name__ == "__main__":
+#     main()
 
 
