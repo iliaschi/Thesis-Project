@@ -477,3 +477,36 @@ https://arxiv.org/pdf/1503.02531.pdf
 https://arxiv.org/pdf/1909.13788.pdf
 https://arxiv.org/pdf/1603.09382.pdf
 https://arxiv.org/pdf/1909.13719.pdf
+
+
+# 15/03/2025
+
+## Idea : Train and Test on splits
+Create splits that look something like: 
+  - 100% women and 100% men
+  - 100% women and 75% men
+  - ...
+
+Do a accuracy plot to see how it changes
+
+
+See how the accuracy changes for different: 
+  - Training splits based on full test
+  - Testing splits based on full training
+
+### Tasks 
+  
+  - Do the splits 
+  - Do Testing and save results of all
+  - Do Traing and Test, then save results of accuracy and metrics
+  - Do plots of these 2 for accuracy and other metrics
+
+## Heat Map of Faces of Correct and Incorrect predictions
+
+See how it focuses on faces show the results on examples of the 2 classes correct and incorrect
+
+See how the distribution is for these classes
+
+## Confidense Levels distribution of Correct and Incorrect
+
+To see how it works for correct and incorrect. Something like a reliability graph for each emotion on each Class and one reliability for All emotions together

@@ -163,8 +163,8 @@ def create_gender_splits(base_dir, emotions, output_dir, seed=42):
 
 def main():
     # Direct input variables instead of using argparse
-    base_dir = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_train"
-    output_dir = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\train_splits"
+    base_dir = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_test"
+    output_dir = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits"
     seed = 42
     
     # List of emotions to process
