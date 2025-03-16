@@ -32,7 +32,7 @@ def export_model_to_state_dict(old_model_path, state_dict_path):
 
 if __name__ == "__main__":
     # Example usage:
-    old_model_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew.pt"
-    state_dict_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
+    old_model_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\state_vggface2_enet0_new.pt"
+    state_dict_path = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_base_vggface2_state_dict.pth"
     
     export_model_to_state_dict(old_model_path, state_dict_path)

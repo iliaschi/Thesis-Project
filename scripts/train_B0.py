@@ -14,6 +14,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import json
 
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
@@ -24,21 +25,27 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader, Subset
 from sklearn.metrics import confusion_matrix
 import pandas as pd
+import matplotlib as plt
 
 import random
 import collections
+
+import time
+
+from datetime import datetime
 
 #######################
 # 1) Configuration
 #######################
 # Paths to your synthetic data
 BASE_SYNTH_DIR = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic"
-TRAIN_DIR = os.path.join(BASE_SYNTH_DIR, "synth_train")  # e.g. .../angry_men_proc, angry_women_proc, ...
-TEST_DIR  = os.path.join(BASE_SYNTH_DIR, "synth_test")
+TRAIN_DIR = r"data/synthetic/train_splits/100M_100W" #os.path.join(BASE_SYNTH_DIR, "100M_100W")  # e.g. .../angry_men_proc, angry_women_proc, ...
+TEST_DIR  = os.path.join(BASE_SYNTH_DIR, "100M_100W")
+VAL_DIR = "val_real"
 
 # A path to your existing pretrained EfficientNet weights (as a state_dict).
 PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
-SAVE_FINETUNED_MODEL = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_efficientnet_b0_finetuned_test_cuda_10.pt"
+SAVE_FINETUNED_MODEL = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_efficientnet_b0_finetuned_test_cuda_full_real.pt"
 
 # Basic training hyperparameters
 IMG_SIZE       = 224
@@ -48,9 +55,11 @@ LEARNING_RATE  = 1e-4
 EPOCHS         = 10
 DEVICE         = "cuda" if torch.cuda.is_available() else "cpu"
 
+dropout_rate = 0.2
+
 
 # Fraction of the training dataset to use, e.g. 0.1 => 10%
-TRAIN_FRACTION  = 0.5
+TRAIN_FRACTION  = 1
 
 
 ##############################
@@ -83,29 +92,6 @@ def subset_dataset(full_dataset, fraction=1.0):
     return Subset(full_dataset, chosen_indices)
 
 
-##############################
-# CREATE MODEL
-##############################
-# def create_efficientnet_b0(num_classes, pretrained_weight_path=None):
-#     """
-#     Create an EfficientNet-B0 from timm, optionally load an external state_dict,
-#     and replace the final classifier to match 'num_classes'.
-#     """
-#     model = timm.create_model('tf_efficientnet_b0', pretrained=False)
-    
-#     # If you have external weights, load them
-#     if pretrained_weight_path is not None and os.path.exists(pretrained_weight_path):
-#         state_dict = torch.load(pretrained_weight_path, map_location="cpu")
-#         model.load_state_dict(state_dict, strict=True)
-#         print(f"[INFO] Loaded external pretrained state_dict: {pretrained_weight_path}")
-#     else:
-#         print("[WARNING] No external weights loaded (or path doesn't exist).")
-    
-    
-#     model.classifier = nn.Sequential(nn.Linear(1280, num_classes))
-#     # Replace classifier with a new linear layer for your emotion classes
-#     # model.classifier = nn.Sequential(nn.Linear(in_features=1280, out_features=num_classes)) # old
-#     return model
 
 def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
     """
@@ -113,11 +99,27 @@ def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
     then attempts to load either a state dict or a full model object
     if 'weights_path' is given.
     """
-    # Step 1: create baseline model
-    model = timm.create_model('tf_efficientnet_b0', pretrained=False)
     
-    # Step 2: define the final classifier EXACTLY as in your testing code
+        # Create baseline model
+    model = timm.create_model('tf_efficientnet_b0', pretrained=False, drop_rate=dropout_rate)
+    
+    # # Replace classifier with dropout + linear layer
+    # model.classifier = nn.Sequential(
+    #     nn.Dropout(dropout_rate),
+    #     nn.Linear(1280, num_classes)
+    # )
+
+    # model.classifier = nn.Sequential(
+    # nn.Dropout(p=0.4),
+    # nn.Linear(1280, num_classes)
+    # )
+
+    # # Step 1: create baseline model
+    # model = timm.create_model('tf_efficientnet_b0', pretrained=False)
+    
+    # # Step 2: define the final classifier EXACTLY as in your testing code
     model.classifier = nn.Sequential(nn.Linear(1280, num_classes))
+
     
     # Step 3: if we have a weights_path, check if it’s a state dict or full model
     if weights_path is not None and len(weights_path) > 0:
@@ -148,20 +150,103 @@ def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
 ##############################
 # TRAIN FUNCTION
 ##############################
-def train_model(model, train_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE):
+# def train_model(model, train_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE):
+#     """
+#     Minimal training loop (no validation), just to demonstrate partial training.
+#     """
+#     criterion = nn.CrossEntropyLoss()
+#     optimizer = optim.Adam(model.parameters(), lr=lr)
+    
+#     for epoch in range(1, epochs+1):
+#         model.train()
+#         total_loss = 0.0
+#         correct = 0
+#         total_samples = len(train_loader.dataset)
+        
+#         for images, labels in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs}"):
+#             images, labels = images.to(device), labels.to(device)
+#             optimizer.zero_grad()
+            
+#             outputs = model(images)
+#             loss = criterion(outputs, labels)
+#             loss.backward()
+#             optimizer.step()
+            
+#             total_loss += loss.item() * images.size(0)
+#             preds = outputs.argmax(dim=1)
+#             correct += (preds == labels).sum().item()
+        
+#         epoch_loss = total_loss / total_samples
+#         epoch_acc = 100.0 * correct / total_samples
+#         print(f"Epoch {epoch} - Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.2f}%")
+
+#     print("[INFO] Finished training (no validation used here).")
+
+#     # Save just the state_dict (recommended)
+#     torch.save(model.state_dict(), SAVE_FINETUNED_MODEL)
+#     print(f "[INFO] Saved fine-tuned model state_dict to '{SAVE_FINETUNED_MODEL}' ")
+
+
+
+#### Train function 2
+# def train_model(model, train_loader, val_loader=None, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE, save_path=SAVE_FINETUNED_MODEL):
+def train_model(model, train_loader, val_loader=None, device=DEVICE, epochs=EPOCHS, 
+                lr=LEARNING_RATE, save_path=SAVE_FINETUNED_MODEL, 
+                early_stopping_patience=3):
     """
-    Minimal training loop (no validation), just to demonstrate partial training.
+    Training loop with metrics tracking and CSV logging.
+    
+    Parameters:
+    -----------
+    model : torch.nn.Module
+        Model to train
+    train_loader : torch.utils.data.DataLoader
+        Training data loader
+    val_loader : torch.utils.data.DataLoader, optional
+        Validation data loader (if None, no validation is performed)
+    device : str
+        Device to train on ('cuda' or 'cpu')
+    epochs : int
+        Number of epochs to train for
+    lr : float
+        Learning rate
+    save_path : str
+        Path to save the trained model state_dict
     """
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    # optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(
+    model.parameters(),
+    lr=1e-4,
+    weight_decay=1e-5
+    )
+    # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=3, verbose=True)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=3)
+    
+    # Initialize dictionary to store metrics
+    metrics = {
+        'epoch': [],
+        'train_loss': [],
+        'train_acc': [],
+        'val_loss': [],
+        'val_acc': [],
+        'learning_rate': [],
+        'time_taken': []
+    }
+    
+    best_val_acc = 0.0
+    patience_counter = 0
     
     for epoch in range(1, epochs+1):
+        epoch_start_time = time.time()
+        
+        # Training phase
         model.train()
         total_loss = 0.0
         correct = 0
         total_samples = len(train_loader.dataset)
         
-        for images, labels in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs}"):
+        for images, labels in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs} [Train]"):
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
             
@@ -174,642 +259,493 @@ def train_model(model, train_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_R
             preds = outputs.argmax(dim=1)
             correct += (preds == labels).sum().item()
         
-        epoch_loss = total_loss / total_samples
-        epoch_acc = 100.0 * correct / total_samples
-        print(f"Epoch {epoch} - Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.2f}%")
+        train_loss = total_loss / total_samples
+        train_acc = 100.0 * correct / total_samples
+        
+        # Validation phase (if val_loader provided)
+        val_loss = 0.0
+        val_acc = 0.0
+        
 
-    print("[INFO] Finished training (no validation used here).")
+        if val_loader:
+            model.eval()
+            val_correct = 0
+            val_total = len(val_loader.dataset)
+            val_loss_sum = 0.0
+            
+            with torch.no_grad():
+                for images, labels in tqdm(val_loader, desc=f"Epoch {epoch}/{epochs} [Val]"):
+                    images, labels = images.to(device), labels.to(device)
+                    outputs = model(images)
+                    
+                    val_loss_batch = criterion(outputs, labels).item() * images.size(0)
+                    val_loss_sum += val_loss_batch
+                    
+                    preds = outputs.argmax(dim=1)
+                    val_correct += (preds == labels).sum().item()
+            
+            val_loss = val_loss_sum / val_total
+            val_acc = 100.0 * val_correct / val_total
+            
+            # Update scheduler based on validation accuracy
+            scheduler.step(val_acc)
+            
+            # Save best model
+            # if val_acc > best_val_acc:
+            #     best_val_acc = val_acc
+            #     torch.save(model.state_dict(), save_path.replace('.pt', '_best.pt'))
+            #     print(f"[INFO] New best model saved with validation accuracy: {val_acc:.2f}%")
 
-    # Save just the state_dict (recommended)
-    torch.save(model.state_dict(), SAVE_FINETUNED_MODEL)
-    print("[INFO] Saved fine-tuned model state_dict to 'my_finetuned_model_state_dict.pth'")
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                patience_counter = 0
+                # Save best model
+                torch.save(model.state_dict(), save_path.replace('.pt', '_best.pt'))
+                print(f"[INFO] New best model saved with validation accuracy: {val_acc:.2f}%")
+            else:
+                patience_counter += 1
+                print(f"[INFO] Validation accuracy did not improve. Patience: {patience_counter}/{early_stopping_patience}")
+                
+                if patience_counter >= early_stopping_patience:
+                    print(f"[INFO] Early stopping triggered after {epoch} epochs")
+                    break         
+        
+        # Get current learning rate
+        current_lr = optimizer.param_groups[0]['lr']
+        
+        # Calculate epoch time
+        epoch_time = time.time() - epoch_start_time
+        
+        # Record metrics
+        metrics['epoch'].append(epoch)
+        metrics['train_loss'].append(train_loss)
+        metrics['train_acc'].append(train_acc)
+        metrics['val_loss'].append(val_loss if val_loader else float('nan'))
+        metrics['val_acc'].append(val_acc if val_loader else float('nan'))
+        metrics['learning_rate'].append(current_lr)
+        metrics['time_taken'].append(epoch_time)
+        
+        # Print metrics
+        print(f"Epoch {epoch}/{epochs} - Time: {epoch_time:.1f}s")
+        print(f"  Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%")
+        if val_loader:
+            print(f"  Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%")
+        print(f"  Learning Rate: {current_lr:.6f}")
+        
+        # Save metrics to CSV after each epoch
+        csv_path = os.path.dirname(save_path) + '/training_metrics.csv'
+        pd.DataFrame(metrics).to_csv(csv_path, index=False)
+        print(f"[INFO] Metrics saved to '{csv_path}'")
+    
+    print("[INFO] Training complete.")
+    
+    # Save final model
+    torch.save(model.state_dict(), save_path)
+    print(f"[INFO] Final model state_dict saved to '{save_path}'")
+    
+    return model, metrics
 
 
-##############################
-# MAIN
-##############################
+def create_results_directory(base_dir=None):
+    """
+    Create a timestamped results directory with proper structure
+    """
+    if base_dir is None:
+        base_dir = r"C:\Users\ilias\Python\Thesis-Project\results"
+    
+    # Create timestamped directory
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_dir = os.path.join(base_dir, f"training_experiment_{timestamp}")
+    os.makedirs(results_dir, exist_ok=True)
+    
+    # Create subdirectories
+    models_dir = os.path.join(results_dir, "models")
+    metrics_dir = os.path.join(results_dir, "metrics")
+    plots_dir = os.path.join(results_dir, "plots")
+    
+    os.makedirs(models_dir, exist_ok=True)
+    os.makedirs(metrics_dir, exist_ok=True)
+    os.makedirs(plots_dir, exist_ok=True)
+    
+    return {
+        "root": results_dir,
+        "models": models_dir,
+        "metrics": metrics_dir,
+        "plots": plots_dir,
+        "timestamp": timestamp
+    }
+
+def perform_cross_validation(dataset, num_folds=5, batch_size=BATCH_SIZE, 
+                            epochs=EPOCHS, lr=LEARNING_RATE, device=DEVICE,
+                            model_path_prefix=SAVE_FINETUNED_MODEL):
+    """
+    Perform k-fold cross-validation on the dataset.
+    
+    Parameters:
+    -----------
+    dataset : torchvision.datasets.ImageFolder
+        The dataset to use for cross-validation
+    num_folds : int
+        Number of folds for cross-validation
+    batch_size : int
+        Batch size for training
+    epochs : int
+        Number of epochs per fold
+    lr : float
+        Learning rate
+    device : str
+        Device to use for training
+    model_path_prefix : str
+        Prefix for saving models (will append _fold{i})
+    """
+    from sklearn.model_selection import KFold
+    import numpy as np
+    
+    # Setup k-fold cross-validation
+    kfold = KFold(n_splits=num_folds, shuffle=True, random_state=42)
+    
+    # Store metrics for each fold
+    all_metrics = []
+    
+    # Track dataset indices
+    dataset_size = len(dataset)
+    indices = list(range(dataset_size))
+    
+    # Start cross-validation
+    for fold, (train_idx, val_idx) in enumerate(kfold.split(indices)):
+        print(f"\n{'='*40}\nFold {fold+1}/{num_folds}\n{'='*40}")
+        
+        # Create train and validation data loaders
+        train_subsampler = torch.utils.data.SubsetRandomSampler(train_idx)
+        val_subsampler = torch.utils.data.SubsetRandomSampler(val_idx)
+        
+        train_loader = torch.utils.data.DataLoader(
+            dataset, 
+            batch_size=batch_size,
+            sampler=train_subsampler,
+            num_workers=4
+        )
+        
+        val_loader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=batch_size,
+            sampler=val_subsampler,
+            num_workers=4
+        )
+        
+        print(f"[INFO] Training samples: {len(train_idx)}, Validation samples: {len(val_idx)}")
+        
+        # Create a fresh model for each fold
+        model = create_efficientnet_b0(
+            num_classes=NUM_CLASSES,
+            weights_path=PRETRAINED_WEIGHTS,
+            map_location=device
+        )
+        model.to(device)
+        
+        # Train with validation
+        fold_save_path = model_path_prefix.replace('.pt', f'_fold{fold+1}.pt')
+        _, fold_metrics = train_model(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            device=device,
+            epochs=epochs,
+            lr=lr,
+            save_path=fold_save_path
+        )
+        
+        # Store fold metrics with fold number
+        fold_metrics['fold'] = [fold+1] * len(fold_metrics['epoch'])
+        all_metrics.append(pd.DataFrame(fold_metrics))
+    
+    # Combine all fold metrics
+    all_metrics_df = pd.concat(all_metrics, ignore_index=True)
+    
+    # Save combined metrics
+    cv_metrics_path = os.path.dirname(model_path_prefix) + '/cv_metrics.csv'
+    all_metrics_df.to_csv(cv_metrics_path, index=False)
+    print(f"[INFO] Cross-validation metrics saved to '{cv_metrics_path}'")
+    
+    # Calculate and print average metrics across folds
+    avg_metrics = all_metrics_df.groupby('fold')[['val_acc', 'val_loss']].max().mean()
+    print("\nCross-Validation Results:")
+    print(f"Average Best Validation Accuracy: {avg_metrics['val_acc']:.2f}%")
+    print(f"Average Best Validation Loss: {avg_metrics['val_loss']:.4f}")
+    
+    return all_metrics_df
+
+def run_all_splits(split_list):
+    """
+    Run training on multiple data splits and save results
+    
+    Parameters:
+    -----------
+    split_list : list
+        List of split names to process
+    """
+    # Create results directory
+    results_dir = create_results_directory()
+    
+    # Save experiment configuration
+    config = {
+        "BATCH_SIZE": BATCH_SIZE,
+        "LEARNING_RATE": LEARNING_RATE,
+        "EPOCHS": EPOCHS,
+        "PRETRAINED_WEIGHTS": PRETRAINED_WEIGHTS,
+        "TRAIN_FRACTION": TRAIN_FRACTION,
+        "DEVICE": DEVICE,
+        "splits": split_list,
+        "NUM_CLASSES": NUM_CLASSES
+    }
+    
+    with open(os.path.join(results_dir["root"], "config.json"), "w") as f:
+        json.dump(config, f, indent=4)
+    
+    # Store results to compare later
+    all_results = {}
+    
+    for split_name in split_list:
+        train_dir = os.path.join(r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\train_splits", split_name)
+        
+        # Create a unique save path for this split's model
+        save_model_path = os.path.join(results_dir["models"], f"enet_b0_{split_name}_finetuned.pt")
+        
+        print(f"\n{'='*50}")
+        print(f"[INFO] Training on split: {split_name}")
+        print(f"[INFO] Using train folder: {train_dir}")
+        print(f"{'='*50}\n")
+        
+        # 1) Load dataset
+        try:
+            dataset = datasets.ImageFolder(root=train_dir, transform=train_transforms)
+            print(f"[INFO] Found classes: {dataset.classes}")
+            print(f"[INFO] Full dataset size: {len(dataset)}")
+        except Exception as e:
+            print(f"[ERROR] Could not load dataset from {train_dir}: {str(e)}")
+            continue
+        
+        # 2) Subset if needed
+        partial_dataset = subset_dataset(dataset, fraction=TRAIN_FRACTION)
+        print(f"[INFO] Using {len(partial_dataset)} images for training ({TRAIN_FRACTION*100:.1f}% of available data)")
+        
+        train_loader = DataLoader(partial_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+        
+        # 3) Create model
+        model = create_efficientnet_b0(
+            num_classes=NUM_CLASSES,
+            weights_path=PRETRAINED_WEIGHTS,
+            map_location="cpu"
+        )
+        model.to(DEVICE)
+        
+        # 4) Optional: Load a separate val set
+        try:
+            val_dataset = datasets.ImageFolder(root=os.path.join(BASE_SYNTH_DIR, "val_real"), transform=train_transforms)
+            print(f"[INFO] Validation dataset size: {len(val_dataset)}")
+            val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
+        except Exception as e:
+            print(f"[WARNING] Could not load validation dataset: {str(e)}")
+            print("[INFO] Training without validation")
+            val_loader = None
+        
+        # 5) Train
+        try:
+            _, metrics = train_model(
+                model=model,
+                train_loader=train_loader,
+                val_loader=val_loader,
+                device=DEVICE,
+                epochs=EPOCHS,
+                lr=LEARNING_RATE,
+                save_path=save_model_path
+            )
+            
+            # Store metrics for this split
+            metrics_file = os.path.join(results_dir["metrics"], f"{split_name}_metrics.csv")
+            pd.DataFrame(metrics).to_csv(metrics_file, index=False)
+            
+            # Extract key metrics for summary
+            best_val_acc = max(metrics['val_acc']) if val_loader else 0
+            best_val_epoch = metrics['epoch'][np.argmax(metrics['val_acc'])] if val_loader else 0
+            
+            all_results[split_name] = {
+                'best_val_acc': best_val_acc,
+                'best_val_epoch': best_val_epoch,
+                'final_val_acc': metrics['val_acc'][-1] if val_loader else 0,
+                'best_train_acc': max(metrics['train_acc']),
+                'final_train_acc': metrics['train_acc'][-1],
+                'avg_epoch_time': np.mean(metrics['time_taken'])
+            }
+            
+            # Generate learning curves plot
+            try:
+                plt.figure(figsize=(12, 5))
+                
+                # Plot training and validation accuracy
+                plt.subplot(1, 2, 1)
+                plt.plot(metrics['epoch'], metrics['train_acc'], 'b-', label='Training Accuracy')
+                if val_loader:
+                    plt.plot(metrics['epoch'], metrics['val_acc'], 'r-', label='Validation Accuracy')
+                plt.xlabel('Epoch')
+                plt.ylabel('Accuracy (%)')
+                plt.title(f'Accuracy Curves - {split_name}')
+                plt.legend()
+                plt.grid(True, alpha=0.3)
+                
+                # Plot training and validation loss
+                plt.subplot(1, 2, 2)
+                plt.plot(metrics['epoch'], metrics['train_loss'], 'b-', label='Training Loss')
+                if val_loader:
+                    plt.plot(metrics['epoch'], metrics['val_loss'], 'r-', label='Validation Loss')
+                plt.xlabel('Epoch')
+                plt.ylabel('Loss')
+                plt.title(f'Loss Curves - {split_name}')
+                plt.legend()
+                plt.grid(True, alpha=0.3)
+                
+                plt.tight_layout()
+                plt.savefig(os.path.join(results_dir["plots"], f"{split_name}_learning_curves.png"), dpi=300)
+                plt.close()
+            except Exception as e:
+                print(f"[WARNING] Could not generate learning curves plot: {str(e)}")
+            
+        except Exception as e:
+            print(f"[ERROR] Training failed for {split_name}: {str(e)}")
+            all_results[split_name] = {'error': str(e)}
+        
+        print(f"[INFO] Finished training on {split_name}.\n")
+    
+    # Save summary of all results
+    try:
+        results_df = pd.DataFrame.from_dict(all_results, orient='index')
+        summary_path = os.path.join(results_dir["metrics"], "splits_comparison.csv")
+        results_df.to_csv(summary_path)
+        print(f"[INFO] Comparison of all splits saved to {summary_path}")
+        
+        # Generate summary bar plot for validation accuracy
+        if 'best_val_acc' in results_df.columns:
+            plt.figure(figsize=(12, 6))
+            results_df['best_val_acc'].plot(kind='bar', color='skyblue')
+            plt.title('Best Validation Accuracy by Split')
+            plt.xlabel('Split')
+            plt.ylabel('Validation Accuracy (%)')
+            plt.xticks(rotation=45)
+            plt.grid(axis='y', alpha=0.3)
+            plt.tight_layout()
+            plt.savefig(os.path.join(results_dir["plots"], "validation_accuracy_comparison.png"), dpi=300)
+            plt.close()
+    except Exception as e:
+        print(f"[WARNING] Could not save comparison results: {str(e)}")
+    
+    print(f"\n[INFO] All training complete. Results saved to {results_dir['root']}")
+    return results_dir, all_results
+
 def main():
-    print(f"Using device: {DEVICE}")
-    
-    # Load entire dataset
-    full_train_dataset = datasets.ImageFolder(root=TRAIN_DIR, transform=train_transforms)
-    print("[INFO] Found classes in train folder:", full_train_dataset.classes)
-    print("[INFO] Full training set size:", len(full_train_dataset))
-    
-    # Subset
-    partial_train_dataset = subset_dataset(full_train_dataset, fraction=TRAIN_FRACTION)
-    print("[INFO] Subset training set size:", len(partial_train_dataset))
-    
-    # DataLoader
-    train_loader = torch.utils.data.DataLoader(partial_train_dataset,
-                                               batch_size=BATCH_SIZE,
-                                               shuffle=True,
-                                               num_workers=4)
-    
-    # Create model
-    # model = create_efficientnet_b0(num_classes=NUM_CLASSES,pretrained_weight_path=PRETRAINED_WEIGHTS)
-    
-
-        # 2) Create the model with the same approach used in testing
-    model = create_efficientnet_b0(num_classes = NUM_CLASSES, weights_path = PRETRAINED_WEIGHTS, map_location="cpu")
-
-    model.to(DEVICE)
-    
-    # Simple training
-    train_model(model, train_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE)
-
-    print("[INFO] Done. No validation or saving metrics in this script.")
+    split_list = ["100M_0W", "100M_25W", "100M_50W", "100M_75W", "100M_100W", "100W_0M", "100W_25M", "100W_50M", "100W_75M"]
+    run_all_splits(split_list)
 
 if __name__ == "__main__":
     main()
 
 
-# #####################################
-# # 2) DATA TRANSFORMS
-# #####################################
-# train_transforms = transforms.Compose([
-#     transforms.Resize((IMG_SIZE, IMG_SIZE)),
-#     transforms.ToTensor(),
-#     transforms.Normalize(mean=[0.485, 0.456, 0.406],
-#                          std=[0.229, 0.224, 0.225])
-# ])
-# test_transforms = transforms.Compose([
-#     transforms.Resize((IMG_SIZE, IMG_SIZE)),
-#     transforms.ToTensor(),
-#     transforms.Normalize(mean=[0.485, 0.456, 0.406],
-#                          std=[0.229, 0.224, 0.225])
-# ])
-
-# print(train_dataset.classes)
-# for f in os.listdir(TRAIN_DIR):
-#     print(f)
-
-
-# #####################################
-# # 3) DATA SUBSET FUNCTION
-# #####################################
-# def subset_dataset(full_dataset, fraction=1.0):
-#     """
-#     Return a smaller random subset of the given dataset.
-#     fraction=1.0 => use entire dataset
-#     """
-#     if fraction >= 1.0:
-#         return full_dataset  # no need to subset
-    
-#     total_len = len(full_dataset)
-#     subset_len = int(total_len * fraction)
-#     indices = list(range(total_len))
-#     random.shuffle(indices)
-#     subset_indices = indices[:subset_len]
-#     return Subset(full_dataset, subset_indices)
-
-# #####################################
-# # 4) MODEL CREATION
-# #####################################
-# def create_efficientnet_b0(num_classes, pretrained_weight_path=None):
-#     """
-#     Create an EfficientNet-B0 from timm, load a state_dict if provided,
-#     and replace the final classifier with an appropriate linear layer.
-#     """
-#     # 1) create baseline B0 with no built-in pretrained weights
-#     model = timm.create_model('tf_efficientnet_b0', pretrained=False)
-    
-#     # 2) optionally load your external pretrained state_dict
-#     if pretrained_weight_path is not None and os.path.exists(pretrained_weight_path):
-#         state_dict = torch.load(pretrained_weight_path, map_location="cpu")
-#         model.load_state_dict(state_dict, strict=False)
-#         print(f"[INFO] Loaded external pretrained weights from {pretrained_weight_path}")
-#     else:
-#         print("[WARNING] No pretrained weights loaded! Check path or skip if intended.")
-    
-#     # 3) replace final classifier with a single linear for NUM_CLASSES
-#     model.classifier = nn.Sequential(
-#         nn.Linear(in_features=1280, out_features=num_classes)
-#     )
-#     return model
-
-# #####################################
-# # 5) TRAIN AND EVALUATE FUNCTION
-# #####################################
-# def train_and_evaluate(model, train_loader, test_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE):
-#     """
-#     Fine-tune the model on the train_loader and evaluate on test_loader each epoch.
-#     Returns (best_state_dict, best_acc).
-#     """
-#     criterion = nn.CrossEntropyLoss()
-#     optimizer = optim.Adam(model.parameters(), lr=lr)
-    
-#     best_acc = 0.0
-#     best_state = None
-    
-#     for epoch in range(1, epochs+1):
-#         # TRAIN
-#         model.train()
-#         running_loss, running_correct = 0.0, 0
-#         total_train = len(train_loader.dataset)
-        
-#         for images, labels in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs} - Train"):
-#             images, labels = images.to(device), labels.to(device)
-            
-#             optimizer.zero_grad()
-#             outputs = model(images)
-#             loss = criterion(outputs, labels)
-#             loss.backward()
-#             optimizer.step()
-            
-#             running_loss += loss.item() * images.size(0)
-#             preds = outputs.argmax(dim=1)
-#             running_correct += (preds == labels).sum().item()
-        
-#         epoch_loss = running_loss / total_train
-#         epoch_acc  = 100.0 * running_correct / total_train
-        
-#         # VALIDATE
-#         model.eval()
-#         val_loss, val_correct = 0.0, 0
-#         total_test = len(test_loader.dataset)
-        
-#         with torch.no_grad():
-#             for images, labels in tqdm(test_loader, desc=f"Epoch {epoch}/{epochs} - Val"):
-#                 images, labels = images.to(device), labels.to(device)
-#                 outputs = model(images)
-#                 loss = criterion(outputs, labels)
-                
-#                 val_loss += loss.item() * images.size(0)
-#                 preds = outputs.argmax(dim=1)
-#                 val_correct += (preds == labels).sum().item()
-        
-#         val_loss = val_loss / total_test
-#         val_acc  = 100.0 * val_correct / total_test
-        
-#         print(f"Epoch [{epoch}/{epochs}] - "
-#               f"Train Loss: {epoch_loss:.4f}, Train Acc: {epoch_acc:.2f}% | "
-#               f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%")
-        
-#         # Track best validation accuracy
-#         if val_acc > best_acc:
-#             best_acc = val_acc
-#             best_state = copy.deepcopy(model.state_dict())
-    
-#     return best_state, best_acc
-
-# #####################################
-# # 6) EVALUATE AND SAVE METRICS
-# #####################################
-# def evaluate_and_save_metrics(
-#     model, data_loader, device, class_names,
-#     output_dir="results_synth", 
-#     cm_filename="confusion_matrix.csv", 
-#     acc_filename="per_class_accuracy.csv"
-# ):
-#     """
-#     Inference on data_loader, build confusion matrix, save to CSV + per-class accuracy to CSV.
-#     Prints overall accuracy as well.
-#     """
-#     os.makedirs(output_dir, exist_ok=True)
-#     model.eval()
-    
-#     all_preds = []
-#     all_labels = []
-    
-#     with torch.no_grad():
-#         for images, labels in data_loader:
-#             images, labels = images.to(device), labels.to(device)
-#             outputs = model(images)
-#             preds = outputs.argmax(dim=1)
-            
-#             all_preds.extend(preds.cpu().numpy())
-#             all_labels.extend(labels.cpu().numpy())
-    
-#     all_preds  = np.array(all_preds)
-#     all_labels = np.array(all_labels)
-    
-#     cm = confusion_matrix(all_labels, all_preds, labels=range(len(class_names)))
-#     overall_acc = 100.0 * (all_preds == all_labels).sum() / len(all_labels)
-#     print(f"[INFO] Overall Accuracy: {overall_acc:.2f}%")
-
-#     # Save confusion matrix as a DataFrame
-#     df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
-#     df_cm.to_csv(os.path.join(output_dir, cm_filename))
-#     print(f"[INFO] Confusion matrix saved to {os.path.join(output_dir, cm_filename)}")
-
-#     # Compute per-class accuracy
-#     per_class_acc = []
-#     for i, cls_name in enumerate(class_names):
-#         mask = (all_labels == i)
-#         correct_i = (all_preds[mask] == i).sum()
-#         total_i = mask.sum()
-#         acc_i = (100.0 * correct_i / total_i) if total_i > 0 else 0
-#         per_class_acc.append(acc_i)
-    
-#     df_acc = pd.DataFrame({
-#         "Class": class_names,
-#         "Accuracy(%)": per_class_acc,
-#         "Samples": [cm[i, :].sum() for i in range(len(class_names))]
-#     })
-#     df_acc.to_csv(os.path.join(output_dir, acc_filename), index=False)
-#     print(f"[INFO] Per-class accuracy saved to {os.path.join(output_dir, acc_filename)}")
-
-# import random
-# from torch.utils.data import Subset
-
-# def subset_dataset(full_dataset, fraction=0.1):
-#     """
-#     Return a smaller random subset of the given dataset.
-
-#     Parameters
-#     ----------
-#     full_dataset : torch.utils.data.Dataset
-#         An existing dataset, e.g. from torchvision.datasets.ImageFolder.
-#     fraction : float
-#         Fraction of the dataset to keep. For example, 0.1 => keep 10% of images.
-
-#     Returns
-#     -------
-#     Subset
-#         A PyTorch Subset object containing fraction * len(full_dataset) samples.
-#     """
-#     total_len = len(full_dataset)
-#     subset_len = int(total_len * fraction)
-#     indices = list(range(total_len))
-#     random.shuffle(indices)
-#     subset_indices = indices[:subset_len]
-#     return Subset(full_dataset, subset_indices)
-
-
-# #####################################
-# # 7) MAIN FUNCTION
-# #####################################
+# ##############################
+# # MAIN
+# ##############################
 # def main():
-#     # 1) DATA LOADING
+#     print(f"Using device: {DEVICE}")
+    
+#     # Load entire dataset
 #     full_train_dataset = datasets.ImageFolder(root=TRAIN_DIR, transform=train_transforms)
-#     test_dataset       = datasets.ImageFolder(root=TEST_DIR,  transform=test_transforms)
+#     print("[INFO] Found classes in train folder:", full_train_dataset.classes)
+#     print("[INFO] Full training set size:", len(full_train_dataset))
     
-#     # Optionally subset the train set if TRAIN_FRACTION < 1.0
-#     TRAIN_FRACTION=0.01
-#     final_train_dataset = subset_dataset(full_train_dataset, fraction=TRAIN_FRACTION)
+#     # Subset
+#     partial_train_dataset = subset_dataset(full_train_dataset, fraction=TRAIN_FRACTION)
+#     print("[INFO] Subset training set size:", len(partial_train_dataset))
     
-#     train_loader = DataLoader(final_train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-#     test_loader  = DataLoader(test_dataset,       batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
+#     # DataLoader
+#     train_loader = torch.utils.data.DataLoader(partial_train_dataset,
+#                                               batch_size=BATCH_SIZE,
+#                                               shuffle=True,
+#                                               num_workers=4)
     
-#     class_names = list(full_train_dataset.classes)
-#     print(f"[INFO] Class names discovered: {class_names}")
-#     print(f"[INFO] Training set size: {len(final_train_dataset)} / Testing set size: {len(test_dataset)}")
-
-#     # 2) MODEL CREATION
-#     model = create_efficientnet_b0(num_classes=NUM_CLASSES, pretrained_weight_path=PRETRAINED_WEIGHTS)
+#     # Create the model with the same approach used in testing
+#     model = create_efficientnet_b0(num_classes=NUM_CLASSES, weights_path=PRETRAINED_WEIGHTS, map_location="cpu")
 #     model.to(DEVICE)
-
-#     # 3) TRAIN AND EVALUATE
-#     best_state, best_val_acc = train_and_evaluate(
-#         model, train_loader, test_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE
-#     )
-
-#     # If we found a best model, load and save
-#     if best_state is not None:
-#         model.load_state_dict(best_state)
-#         print(f"[INFO] Best validation accuracy: {best_val_acc:.2f}%")
-        
-#         torch.save(model, SAVE_FINETUNED_MODEL)
-#         print(f"[INFO] Finetuned model saved to: {SAVE_FINETUNED_MODEL}")
-#     else:
-#         print("[WARNING] No best model identified, skipping save.")
     
-#     # 4) FINAL EVALUATION METRICS
-#     evaluate_and_save_metrics(
-#         model, test_loader, DEVICE, class_names,
-#         output_dir="results_synth",
-#         cm_filename="confusion_matrix.csv",
-#         acc_filename="per_class_accuracy.csv"
-#     )
-#     print("[INFO] Done.")
+#     # Choose whether to use cross-validation or standard validation
+#     use_cross_validation = False  # Set to True to use cross-validation
+
+#     if use_cross_validation:
+#         # Use k-fold cross-validation on the training set
+#         cv_metrics = perform_cross_validation(
+#             dataset=partial_train_dataset,
+#             num_folds=5,  # 5-fold cross-validation
+#             batch_size=BATCH_SIZE,
+#             epochs=EPOCHS,
+#             lr=LEARNING_RATE,
+#             device=DEVICE
+#         )
+#         print("[INFO] Cross-validation completed.")
+#     else:
+#         # Standard training with separate validation set
+#         val_dataset = datasets.ImageFolder(root=os.path.join(BASE_SYNTH_DIR, "val_real"), transform=train_transforms)
+#         print("[INFO] Found classes in validation folder:", val_dataset.classes)
+#         print("[INFO] Validation set size:", len(val_dataset))
+        
+#         val_loader = torch.utils.data.DataLoader(val_dataset,
+#                                                 batch_size=BATCH_SIZE,
+#                                                 shuffle=False,
+#                                                 num_workers=4)
+        
+#         model, metrics = train_model(
+#             model=model, 
+#             train_loader=train_loader, 
+#             val_loader=val_loader,
+#             device=DEVICE, 
+#             epochs=EPOCHS, 
+#             lr=LEARNING_RATE,
+#             save_path=SAVE_FINETUNED_MODEL
+#         )
+        
+#         print("[INFO] Standard training with validation completed.")
 
 # if __name__ == "__main__":
 #     main()
 
-
-
-
-### old 
-# #######################
-# # 2) Data Transforms
-# #######################
-# train_transforms = transforms.Compose([
-#     transforms.Resize((IMG_SIZE, IMG_SIZE)),
-#     transforms.ToTensor(),
-#     transforms.Normalize(mean=[0.485, 0.456, 0.406],
-#                          std=[0.229, 0.224, 0.225])
-# ])
-# test_transforms = transforms.Compose([
-#     transforms.Resize((IMG_SIZE, IMG_SIZE)),
-#     transforms.ToTensor(),
-#     transforms.Normalize(mean=[0.485, 0.456, 0.406],
-#                          std=[0.229, 0.224, 0.225])
-# ])
-
-# #######################
-# # 3) Dataset & DataLoader
-# #######################
-# def get_data_loaders(train_dir, test_dir, batch_size):
-#     """
-#     Create DataLoaders for train and test sets from folder structures.
-#     train_dir / test_dir each have subfolders of emotion_category
-#     """
-#     train_dataset = datasets.ImageFolder(root=train_dir, transform=train_transforms)
-#     test_dataset  = datasets.ImageFolder(root=test_dir,  transform=test_transforms)
-
-#     train_loader = DataLoader(
-#         train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True
-#     )
-#     test_loader  = DataLoader(
-#         test_dataset,  batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True
-#     )
-
-#     print(f"Train Set: {len(train_dataset)} images across {len(train_dataset.classes)} classes")
-#     print(f"Test  Set: {len(test_dataset)} images across {len(test_dataset.classes)} classes")
-
-#     return train_loader, test_loader, train_dataset.classes
-
-# #######################
-# # 4) Model Setup
-# #######################
-# def create_efficientnet_b0(num_classes):
-#     """
-#     Create an EfficientNet-B0 architecture from timm, 
-#     then load a state_dict if available, 
-#     and replace the final layer with a new classifier for 'num_classes' outputs.
-#     """
-#     # 1) Create baseline B0, no pretrained weights
-#     model = timm.create_model('tf_efficientnet_b0', pretrained=False)
+# no cross val no val dataset
+##############################
+# MAIN
+##############################
+# def main():
+#     print(f"Using device: {DEVICE}")
     
-#     # 2) Load your pretrained feature extractor weights (state_dict)
-#     state_dict = torch.load(PRETRAINED_WEIGHTS, map_location="cpu")
-#     model.load_state_dict(state_dict, strict=True)  # If final layer mismatch, do strict=False
-
-#     # 3) Replace the final layer with a new classifier
-#     #    Some variants have 'model.classifier = nn.Linear(...)'
-#     #    We'll use nn.Sequential for future expandability
-#     model.classifier = nn.Sequential(
-#         nn.Linear(in_features=1280, out_features=num_classes)
-#     )
-#     return model
-
-# #######################
-# # 5) Training Function
-# #######################
-# def train_and_evaluate(model, train_loader, test_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE):
-#     """
-#     Finetune the model on the synthetic train_loader, evaluate on test_loader.
-#     Returns the best model state_dict found during training.
-#     """
-#     # Basic cross-entropy
-#     criterion = nn.CrossEntropyLoss()
+#     # Load entire dataset
+#     full_train_dataset = datasets.ImageFolder(root=TRAIN_DIR, transform=train_transforms)
+#     print("[INFO] Found classes in train folder:", full_train_dataset.classes)
+#     print("[INFO] Full training set size:", len(full_train_dataset))
     
-#     # Use Adam for fine-tuning
-#     optimizer = optim.Adam(model.parameters(), lr=lr)
-
-#     best_acc = 0.0
-#     best_state = None
-
-#     for epoch in range(1, epochs+1):
-#         #################
-#         #   TRAINING
-#         #################
-#         model.train()
-#         running_loss = 0.0
-#         running_correct = 0
-        
-#         for images, labels in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs} - Train"):
-#             images = images.to(device)
-#             labels = labels.to(device)
-
-#             optimizer.zero_grad()
-#             outputs = model(images)
-#             loss = criterion(outputs, labels)
-#             loss.backward()
-#             optimizer.step()
-
-#             running_loss += loss.item() * images.size(0)
-#             preds = outputs.argmax(dim=1)
-#             running_correct += (preds == labels).sum().item()
-        
-#         epoch_loss = running_loss / len(train_loader.dataset)
-#         epoch_acc  = 100.0 * running_correct / len(train_loader.dataset)
-
-#         #################
-#         #  VALIDATION
-#         #################
-#         model.eval()
-#         val_loss = 0.0
-#         val_correct = 0
-        
-#         with torch.no_grad():
-#             for images, labels in tqdm(test_loader, desc=f"Epoch {epoch}/{epochs} - Val"):
-#                 images = images.to(device)
-#                 labels = labels.to(device)
-
-#                 outputs = model(images)
-#                 loss = criterion(outputs, labels)
-
-#                 val_loss += loss.item() * images.size(0)
-#                 preds = outputs.argmax(dim=1)
-#                 val_correct += (preds == labels).sum().item()
-
-#         val_loss = val_loss / len(test_loader.dataset)
-#         val_acc  = 100.0 * val_correct / len(test_loader.dataset)
-
-#         print(f"Epoch [{epoch}/{epochs}] -- "
-#               f"Train Loss: {epoch_loss:.4f}, Train Acc: {epoch_acc:.2f}% | "
-#               f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%")
-
-#         # Track best model
-#         if val_acc > best_acc:
-#             best_acc = val_acc
-#             best_state = copy.deepcopy(model.state_dict())
-
-#     return best_state, best_acc
-
-
-# import random
-# from torch.utils.data import Subset
-
-# def subset_dataset(full_dataset, fraction=0.01):
-#     """
-#     Return a smaller random subset of the given dataset.
-
-#     Parameters
-#     ----------
-#     full_dataset : torch.utils.data.Dataset
-#         An existing dataset, e.g. from torchvision.datasets.ImageFolder.
-#     fraction : float
-#         Fraction of the dataset to keep. For example, 0.1 => keep 10% of images.
-
-#     Returns
-#     -------
-#     Subset
-#         A PyTorch Subset object containing fraction * len(full_dataset) samples.
-#     """
-#     total_len = len(full_dataset)
-#     subset_len = int(total_len * fraction)
-#     indices = list(range(total_len))
-#     random.shuffle(indices)
-#     subset_indices = indices[:subset_len]
-#     return Subset(full_dataset, subset_indices)
-
-# import numpy as np
-# import pandas as pd
-# import os
-# from sklearn.metrics import confusion_matrix
-
-# def evaluate_and_save_metrics(
-#     model, data_loader, device, class_names,
-#     output_dir="results", csv_name="evaluation_metrics.csv", do_gradcam=False
-# ):
-#     """
-#     Run inference on the data_loader, compute confusion matrix, save metrics to a CSV.
-#     Optionally, placeholders for Grad-CAM or interpretability can be added.
-
-#     Parameters
-#     ----------
-#     model : torch.nn.Module
-#         The trained/fine-tuned model.
-#     data_loader : torch.utils.data.DataLoader
-#         Data loader for the evaluation dataset.
-#     device : str
-#         "cpu" or "cuda"
-#     class_names : list
-#         List of class names, e.g. ["Anger","Contempt","Disgust",...].
-#     output_dir : str
-#         Directory path to save metrics/results.
-#     csv_name : str
-#         Name of the CSV file to store confusion matrix and per-class stats.
-#     do_gradcam : bool
-#         If True, you might add code for Grad-CAM heatmaps or interpretability here.
-
-#     Returns
-#     -------
-#     None
-#         But writes out confusion matrix and metrics into a CSV, plus an optional text summary.
-#     """
-#     os.makedirs(output_dir, exist_ok=True)
-
-#     model.eval()
-#     all_preds = []
-#     all_labels = []
+#     # Subset
+#     partial_train_dataset = subset_dataset(full_train_dataset, fraction=TRAIN_FRACTION)
+#     print("[INFO] Subset training set size:", len(partial_train_dataset))
     
-#     with torch.no_grad():
-#         for images, labels in data_loader:
-#             images = images.to(device)
-#             labels = labels.to(device)
-            
-#             outputs = model(images)
-#             preds = outputs.argmax(dim=1)
-
-#             all_preds.extend(preds.cpu().numpy())
-#             all_labels.extend(labels.cpu().numpy())
+#     # DataLoader
+#     train_loader = torch.utils.data.DataLoader(partial_train_dataset,
+#                                                batch_size=BATCH_SIZE,
+#                                                shuffle=True,
+#                                                num_workers=4)
     
-#     all_preds = np.array(all_preds)
-#     all_labels = np.array(all_labels)
 
-#     # Compute confusion matrix
-#     cm = confusion_matrix(all_labels, all_preds, labels=range(len(class_names)))
-#     # Per-class accuracy
-#     class_acc = []
-#     for i in range(len(class_names)):
-#         mask = (all_labels == i)
-#         correct = (all_preds[mask] == i).sum()
-#         total_i = mask.sum()
-#         accuracy_i = 100.0 * correct / total_i if total_i > 0 else 0
-#         class_acc.append(accuracy_i)
+#     # 2) Create the model with the same approach used in testing
+#     model = create_efficientnet_b0(num_classes = NUM_CLASSES, weights_path = PRETRAINED_WEIGHTS, map_location="cpu")
 
-#     # Prepare a DataFrame with metrics
-#     df = pd.DataFrame(cm, columns=class_names, index=class_names)
-#     df.index.name = 'True'
-#     df.columns.name = 'Predicted'
-    
-#     # Save confusion matrix
-#     cm_csv_path = os.path.join(output_dir, csv_name)
-#     df.to_csv(cm_csv_path)
-    
-#     # Save per-class accuracy as well
-#     acc_data = {
-#         'class': class_names,
-#         'accuracy(%)': class_acc,
-#         'samples': [cm[i, :].sum() for i in range(len(class_names))]
-#     }
-#     df_acc = pd.DataFrame(acc_data)
-#     acc_csv_path = os.path.join(output_dir, "per_class_accuracy.csv")
-#     df_acc.to_csv(acc_csv_path, index=False)
-
-#     # Print or log summary
-#     overall_acc = 100.0 * (all_preds == all_labels).sum() / len(all_labels)
-#     print(f"Overall Accuracy: {overall_acc:.2f}%")
-#     print("Per-class results saved to:", acc_csv_path)
-
-#     if do_gradcam:
-#         # Placeholder: Grad-CAM requires hooking your model’s last conv layer,
-#         # generating heatmaps for each image, etc.
-#         # This is too large to detail here, but you can see e.g. pytorch-grad-cam library.
-#         pass
-
-
-# #######################
-# # 6) Main Script
-# #######################
-# def main_synthetic_demo():
-#     """
-#     Demonstration of:
-#     1) Creating data loaders from synthetic train/test
-#     2) Optionally subset the training data to a fraction
-#     3) Fine-tuning an EfficientNet
-#     4) Evaluating the results, saving confusion matrix & per-class stats to CSV
-#     """
-#     # 1. Data
-#     from torchvision import datasets
-#     from torch.utils.data import DataLoader
-    
-#     # get the full train dataset
-#     full_train_ds = datasets.ImageFolder(root=TRAIN_DIR, transform=train_transforms)
-    
-#     # Let's say we want only 10% to see if it runs quickly
-#     train_fraction = 0.01
-#     small_train_ds = subset_dataset(full_train_ds, fraction=train_fraction)
-#     train_loader = DataLoader(small_train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-
-#     test_ds = datasets.ImageFolder(root=TEST_DIR, transform=test_transforms)
-#     test_loader = DataLoader(test_ds, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
-    
-#     class_names = list(full_train_ds.classes)
-#     print("Training classes:", class_names)
-    
-#     # 2. Model
-#     model = create_efficientnet_b0(num_classes=NUM_CLASSES)
 #     model.to(DEVICE)
-
-#     # 3. Fine-tuning
-#     best_state, best_acc = train_and_evaluate(
-#         model, train_loader, test_loader,
-#         device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE
-#     )
     
-#     if best_state is not None:
-#         model.load_state_dict(best_state)
-#         print(f"[INFO] Best validation accuracy: {best_acc:.2f}%")
-#         # Save final model if desired
-#         torch.save(model, SAVE_FINETUNED_MODEL)
-#         print(f"[INFO] Finetuned model saved at: {SAVE_FINETUNED_MODEL}")
-#     else:
-#         print("[WARNING] No improvement found, skipping save.")
+#     # Simple training
+#     train_model(model, train_loader, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE)
 
-#     # 4. Evaluate + Save Metrics (Confusion Matrix, Per-class stats)
-#     evaluate_and_save_metrics(
-#         model, test_loader, DEVICE, class_names,
-#         output_dir="results_synth_demo", 
-#         csv_name="confusion_matrix.csv",
-#         do_gradcam=False  # or True if you expand with Grad-CAM
-#     )
-#     print("[INFO] Evaluation metrics saved in 'results_synth_demo' folder.")
+#     print("[INFO] Done. No validation or saving metrics in this script.")
 
 # if __name__ == "__main__":
-#     main_synthetic_demo()
-
+#     main()

@@ -227,8 +227,8 @@ import torch
 
 def main():
     # Define base directories
-    input_base_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\raw_grids'
-    output_base_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\processed_python_2.0'
+    input_base_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\val_folder'
+    output_base_dir = r'C:\Users\ilias\Python\Thesis-Project\data\synthetic\val_ready'
 
     # Create detector
     detector = FaceDetector(
