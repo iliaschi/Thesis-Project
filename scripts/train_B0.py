@@ -44,8 +44,10 @@ TEST_DIR  = os.path.join(BASE_SYNTH_DIR, "100M_100W")
 VAL_DIR = "val_real"
 
 # A path to your existing pretrained EfficientNet weights (as a state_dict).
-PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
-SAVE_FINETUNED_MODEL = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_efficientnet_b0_finetuned_test_cuda_full_real.pt"
+# C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_base_vggface2_state_dict.pth # base state dict
+# PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
+PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_base_vggface2_state_dict.pth"
+SAVE_FINETUNED_MODEL = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_EffNet_b0_finetuned_test_cuda_synth_data_real_val.pt"
 
 # Basic training hyperparameters
 IMG_SIZE       = 224
@@ -129,13 +131,13 @@ def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
             
             if isinstance(checkpoint, collections.OrderedDict):
                 # It's already a pure state dict
-                model.load_state_dict(checkpoint, strict=True)
+                model.load_state_dict(checkpoint, strict=False)
                 print("[INFO] Loaded pure state_dict directly.")
             else:
                 # Possibly a full model or something else
                 # e.g. checkpoint might have .state_dict()
                 if hasattr(checkpoint, 'state_dict'):
-                    model.load_state_dict(checkpoint.state_dict(), strict=True)
+                    model.load_state_dict(checkpoint.state_dict(), strict=False)
                     print("[INFO] Extracted state_dict from entire model object.")
                 else:
                     print("[WARNING] checkpoint is neither an OrderedDict nor a full model with state_dict. Skipping load.")
@@ -192,7 +194,7 @@ def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
 # def train_model(model, train_loader, val_loader=None, device=DEVICE, epochs=EPOCHS, lr=LEARNING_RATE, save_path=SAVE_FINETUNED_MODEL):
 def train_model(model, train_loader, val_loader=None, device=DEVICE, epochs=EPOCHS, 
                 lr=LEARNING_RATE, save_path=SAVE_FINETUNED_MODEL, 
-                early_stopping_patience=3):
+                early_stopping_patience=5):
     """
     Training loop with metrics tracking and CSV logging.
     

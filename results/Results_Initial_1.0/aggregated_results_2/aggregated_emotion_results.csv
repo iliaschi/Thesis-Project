@@ -1,8 +1,0 @@
-Emotion,Accuracy,TotalImages,Timestamp,JSON_path
-Angry,79.01234567901234,162,20250310_160137,C:\Users\ilias\Python\Thesis-Project\results\Results_Initial_1.0\angry\metadata.json
-Disgust,29.375,160,20250309_150001,C:\Users\ilias\Python\Thesis-Project\results\Results_Initial_1.0\disgust\metadata.json
-Fear,67.56756756756756,74,20250309_150043,C:\Users\ilias\Python\Thesis-Project\results\Results_Initial_1.0\fear\metadata.json
-Happiness,83.96624472573839,1185,20250313_143415,C:\Users\ilias\Python\Thesis-Project\results\Results_Initial_1.0\happiness\metadata.json
-Neutral,60.0,680,20250309_150226,C:\Users\ilias\Python\Thesis-Project\results\Results_Initial_1.0\neutral\metadata.json
-Sadness,85.98326359832636,478,20250309_150409,C:\Users\ilias\Python\Thesis-Project\results\Results_Initial_1.0\sad\metadata.json
-Surprise,31.306990881458965,329,20250309_150449,C:\Users\ilias\Python\Thesis-Project\results\Results_Initial_1.0\surprised\metadata.json
