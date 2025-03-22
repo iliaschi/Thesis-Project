@@ -17,22 +17,9 @@ import seaborn as sns
 
 from torchvision import transforms
 
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.calibration import calibration_curve
-
-
 import torchvision.transforms as transforms
 
-import os
-import torch
-import torch.nn.functional as F
-import timm
-import numpy as np
-import pandas as pd
-from PIL import Image
-from tqdm import tqdm
-from datetime import datetime
-import torchvision.transforms as transforms
+
 
 def create_efficientnet_b0(num_classes, device='cuda'):
     model = timm.create_model('tf_efficientnet_b0', pretrained=False)
@@ -43,7 +30,7 @@ def create_efficientnet_b0(num_classes, device='cuda'):
     model.eval()
     return model
 
-def load_weights(model, weight_path, device='cuda', strict=False):
+def load_weights(model, weight_path, device='cuda', strict=True):
     checkpoint = torch.load(weight_path, map_location=device)
     model.load_state_dict(checkpoint, strict=strict)
     return model
@@ -81,6 +68,7 @@ def predict_folder(model, folder_path, true_emotion, transform, class_to_idx, de
         with torch.no_grad():
             logits = model(batch)
             probs  = F.softmax(logits, dim=1).cpu().numpy()
+        eps = 1e-12  # small constant to prevent log(0)
         for i in range(len(buffer_imgs)):
             row = {}
             row['file'] = os.path.basename(buffer_paths[i])
@@ -92,6 +80,9 @@ def predict_folder(model, folder_path, true_emotion, transform, class_to_idx, de
             row['predicted_emotion'] = idx_to_class[pred_idx] if pred_idx in idx_to_class else "Unknown"
             row['correct'] = (pred_idx==true_idx)
             row['confidence'] = float(probs[i,pred_idx])
+            # Compute the negative log likelihood for the true class:
+            true_prob = max(probs[i, true_idx], eps)
+            row['neg_log_likelihood'] = float(-np.log(true_prob))
             # store all class probabilities
             for cix, cname in idx_to_class.items():
                 row[f"prob_{cname}"] = float(probs[i,cix])
@@ -122,17 +113,47 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # 1) Where your model weights are stored
-    model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_20250316_013917finetuned_real\models"
-    
+
+    # 40 epochs finetuned on synthetic
+    # C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_fine_20250319_040801\models
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_fine_20250319_040801\models"
+
+
+    # 40 epochs trained on synthetic
+    # C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\models
+    model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\models"
+
+
+    # base model 40 epochs
+    # C:\Users\ilias\Python\Thesis-Project\results\Affect_Net_base
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\Affect_Net_base\model"
+
+    # full finetuned gender splits at : C:\Users\ilias\Python\Thesis-Project\results\training_experiment_20250316_013917finetuned_real
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_20250316_013917finetuned_real\models"
+    # full synthetic gender splits at : C:\Users\ilias\Python\Thesis-Project\results\training_experiment_20250316_122332synthetic_on_vggface2
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_20250316_122332synthetic_on_vggface2\models"
+
     # 2) Your test root that has subfolders for each emotion
     #    e.g. test_root/Angry_6, test_root/Disgust_12, etc.
-    # rafdb C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test
-    test_root = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
+    
+    #### REAL rafdb C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test
+    # test_root = r"C:\Users\ilias\Python\Thesis-Project\data\real\RAF_DB\DATASET\test"
+
+    # SYNTHETIC full test data C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W
+    # test_root = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W"
+
+    # Synthetic full no folder
+    test_root = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_100_combined"
 
     # 3) A global output folder
-    global_out_dir = r"C:\Users\ilias\Python\Thesis-Project\results\Results_2.0"
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    overall_dir = os.path.join(global_out_dir, f"predictions_real_{timestamp}")
+    # global_out_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203"
+
+    model_parent_dir = os.path.dirname(model_dir)
+    print(model_parent_dir)
+    global_out_dir = model_parent_dir
+    
+    timestamp = datetime.now().strftime("%m%d_%H%M%S")
+    overall_dir = os.path.join(global_out_dir, f"predictions_on_synth_2_{timestamp}")
     os.makedirs(overall_dir, exist_ok=True)
 
     # 4) class mapping

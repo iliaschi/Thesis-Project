@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import json
+import torch.optim.lr_scheduler as lr_sched
 
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
@@ -25,7 +26,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader, Subset
 from sklearn.metrics import confusion_matrix
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 import random
 import collections
@@ -44,11 +45,11 @@ IMG_SIZE       = 224
 NUM_CLASSES    = 8
 BATCH_SIZE     = 32
 LEARNING_RATE  = 1e-4
-EPOCHS         = 30 # 10 # 40 as the paper
+EPOCHS         = 40 # 10 # 40 as the paper
 DEVICE         = "cuda" if torch.cuda.is_available() else "cpu"
 
 dropout_rate = 0.2 # only for vggface2 as a base for only synth training
-EARLY_STOP_PATIENCE = 20 # 5
+EARLY_STOP_PATIENCE = 40 # 5
 TRAIN_FRACTION  = 1 # Fraction of the training dataset to use, e.g. 0.1 => 10%
 
 # Paths to your synthetic data
@@ -59,7 +60,7 @@ BASE_SYNTH_DIR = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\train_spl
 # training data splits
 train_splits = os.path.join(BASE_SYNTH_DIR, "train_splits")
 
-VAL_DIR = "val_real"
+VAL_DIR = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\val_real"
 
 # A path to your existing pretrained EfficientNet weights (as a state_dict).
 # C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_base_vggface2_state_dict.pth # base state dict
@@ -112,7 +113,7 @@ def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
     
         # Create baseline model
     # model = timm.create_model('tf_efficientnet_b0', pretrained=False, drop_rate=dropout_rate) # Dropout for synthetic data only
-    model = timm.create_model('tf_efficientnet_b0', pretrained=False)
+    model = timm.create_model('tf_efficientnet_b0', pretrained=False) # for finetuned real base
     
     # # Step 2: define the final classifier EXACTLY as in your testing code
     model.classifier = nn.Sequential(nn.Linear(1280, num_classes))
@@ -127,7 +128,7 @@ def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
             if isinstance(checkpoint, collections.OrderedDict):
                 # It's already a pure state dict
                 # model.load_state_dict(checkpoint, strict=False) # False for synthetic data only
-                model.load_state_dict(checkpoint, strict=True)
+                model.load_state_dict(checkpoint, strict=True) # Trur for real base
                 print("[INFO] Loaded pure state_dict directly.")
             else:
                 # Possibly a full model or something else
@@ -149,38 +150,28 @@ def create_efficientnet_b0(num_classes, weights_path=None, map_location="cpu"):
 ##############################
 # TRAIN FUNCTION
 ##############################
-
-def train_model(model, train_loader, 
-                val_loader=None, device=DEVICE, 
-                epochs=EPOCHS, lr=LEARNING_RATE, 
-                save_path=SAVE_FINETUNED_MODEL, 
-                early_stopping_patience=5):
+def train_model(
+    model,
+    train_loader,
+    val_loader=None,
+    device=DEVICE,
+    epochs=EPOCHS,
+    lr=LEARNING_RATE,
+    save_path=SAVE_FINETUNED_MODEL,
+    early_stopping_patience=EARLY_STOP_PATIENCE
+):
     """
-    Training loop with metrics tracking and CSV logging.
-    
-    Parameters:
-    -----------
-    model : torch.nn.Module
-        Model to train
-    train_loader : torch.utils.data.DataLoader
-        Training data loader
-    val_loader : torch.utils.data.DataLoader, optional
-        Validation data loader (if None, no validation is performed)
-    device : str
-        Device to train on ('cuda' or 'cpu')
-    epochs : int
-        Number of epochs to train for
-    lr : float
-        Learning rate
-    save_path : str
-        Path to save the trained model state_dict
+    Training loop with:
+      - CrossEntropyLoss
+      - AdamW + CosineAnnealing (or your chosen optimizer / scheduler)
+      - Early stopping + best-model saving
+      - CSV logging after each epoch
+      - Saving an extra model checkpoint every 5 epochs
     """
     criterion = nn.CrossEntropyLoss()
-    # optimizer = optim.Adam(model.parameters(), lr=lr)
-    optimizer = optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=3)
-    
-    # Initialize dictionary to store metrics
+    optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=30, eta_min=1e-6)
+
     metrics = {
         'epoch': [],
         'train_loss': [],
@@ -194,10 +185,10 @@ def train_model(model, train_loader,
     best_val_acc = 0.0
     patience_counter = 0
     
-    for epoch in range(1, epochs+1):
+    for epoch in range(1, epochs + 1):
         epoch_start_time = time.time()
         
-        # Training phase
+        # -- TRAIN --
         model.train()
         total_loss = 0.0
         correct = 0
@@ -219,11 +210,10 @@ def train_model(model, train_loader,
         train_loss = total_loss / total_samples
         train_acc = 100.0 * correct / total_samples
         
-        # Validation phase (if val_loader provided)
+        # -- VALIDATION (if any) --
         val_loss = 0.0
         val_acc = 0.0
         
-
         if val_loader:
             model.eval()
             val_correct = 0
@@ -244,31 +234,34 @@ def train_model(model, train_loader,
             val_loss = val_loss_sum / val_total
             val_acc = 100.0 * val_correct / val_total
             
-            # Update scheduler based on validation accuracy
-            scheduler.step(val_acc)
-
-
+            # Step scheduler by val_acc (or remove if you prefer).
+            # scheduler.step(val_acc) # for ReduceLROnPlateau
+            scheduler.step() # for CosineAnnealingLR
+            
+            # Update best model if improvement
             if val_acc > best_val_acc:
                 best_val_acc = val_acc
                 patience_counter = 0
-                # Save best model
-                torch.save(model.state_dict(), save_path.replace('.pt', '_best_val.pt'))
-                print(f"[INFO] New best model saved with validation accuracy: {val_acc:.2f}%")
+                best_val_path = save_path.replace('.pt', '_best_val.pt')
+                torch.save(model.state_dict(), best_val_path)
+                print(f"[INFO] New best model => val_acc: {val_acc:.2f}% @ epoch {epoch}")
             else:
                 patience_counter += 1
-                print(f"[INFO] Validation accuracy did not improve. Patience: {patience_counter}/{early_stopping_patience}")
-                
+                print(f"[INFO] val_acc did not improve. Patience: {patience_counter}/{early_stopping_patience}")
                 if patience_counter >= early_stopping_patience:
                     print(f"[INFO] Early stopping triggered after {epoch} epochs")
-                    break         
+                    break
         
-        # Get current learning rate
+        # -- PERIODIC SAVE (every 5 epochs) --
+        if (epoch % 5) == 0:
+            checkpoint_path = save_path.replace('.pt', f'_epoch{epoch}.pt')
+            torch.save(model.state_dict(), checkpoint_path)
+            print(f"[INFO] Saved checkpoint at epoch {epoch} => {checkpoint_path}")
+        
+        # -- LOG EPOCH METRICS --
         current_lr = optimizer.param_groups[0]['lr']
-        
-        # Calculate epoch time
         epoch_time = time.time() - epoch_start_time
         
-        # ---- RECORD METRICS ----
         metrics['epoch'].append(epoch)
         metrics['train_loss'].append(train_loss)
         metrics['train_acc'].append(train_acc)
@@ -277,7 +270,6 @@ def train_model(model, train_loader,
         metrics['learning_rate'].append(current_lr)
         metrics['time_taken'].append(epoch_time)
         
-        # Print metrics
         print(f"Epoch {epoch}/{epochs} - Time: {epoch_time:.1f}s")
         print(f"  Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%")
         if val_loader:
@@ -287,15 +279,164 @@ def train_model(model, train_loader,
         # Save metrics to CSV after each epoch
         csv_path = os.path.dirname(save_path) + '/training_metrics.csv'
         pd.DataFrame(metrics).to_csv(csv_path, index=False)
-        print(f"[INFO] Metrics saved to '{csv_path}'")
+        print(f"[INFO] Metrics saved => '{csv_path}'")
     
     print("[INFO] Training complete.")
     
-    # Save final model
+    # -- SAVE FINAL MODEL --
     torch.save(model.state_dict(), save_path)
-    print(f"[INFO] Final model state_dict saved to '{save_path}'")
+    print(f"[INFO] Final model => '{save_path}'")
     
     return model, metrics
+
+# def train_model(model, train_loader, 
+#                 val_loader=None, device=DEVICE, 
+#                 epochs=EPOCHS, lr=LEARNING_RATE, 
+#                 save_path=SAVE_FINETUNED_MODEL, 
+#                 early_stopping_patience=EARLY_STOP_PATIENCE):
+#     """
+#     Training loop with metrics tracking and CSV logging.
+    
+#     Parameters:
+#     -----------
+#     model : torch.nn.Module
+#         Model to train
+#     train_loader : torch.utils.data.DataLoader
+#         Training data loader
+#     val_loader : torch.utils.data.DataLoader, optional
+#         Validation data loader (if None, no validation is performed)
+#     device : str
+#         Device to train on ('cuda' or 'cpu')
+#     epochs : int
+#         Number of epochs to train for
+#     lr : float
+#         Learning rate
+#     save_path : str
+#         Path to save the trained model state_dict
+#     """
+#     criterion = nn.CrossEntropyLoss()
+#     # optimizer = optim.Adam(model.parameters(), lr=lr)
+#     # optimizer = optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
+#     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
+
+#     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=3)
+#     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=30, eta_min=1e-6)
+#     # Initialize dictionary to store metrics
+#     metrics = {
+#         'epoch': [],
+#         'train_loss': [],
+#         'train_acc': [],
+#         'val_loss': [],
+#         'val_acc': [],
+#         'learning_rate': [],
+#         'time_taken': []
+#     }
+    
+#     best_val_acc = 0.0
+#     patience_counter = 0
+    
+#     for epoch in range(1, epochs+1):
+#         epoch_start_time = time.time()
+        
+#         # Training phase
+#         model.train()
+#         total_loss = 0.0
+#         correct = 0
+#         total_samples = len(train_loader.dataset)
+        
+#         for images, labels in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs} [Train]"):
+#             images, labels = images.to(device), labels.to(device)
+#             optimizer.zero_grad()
+            
+#             outputs = model(images)
+#             loss = criterion(outputs, labels)
+#             loss.backward()
+#             optimizer.step()
+            
+#             total_loss += loss.item() * images.size(0)
+#             preds = outputs.argmax(dim=1)
+#             correct += (preds == labels).sum().item()
+        
+#         train_loss = total_loss / total_samples
+#         train_acc = 100.0 * correct / total_samples
+        
+#         # Validation phase (if val_loader provided)
+#         val_loss = 0.0
+#         val_acc = 0.0
+        
+
+#         if val_loader:
+#             model.eval()
+#             val_correct = 0
+#             val_total = len(val_loader.dataset)
+#             val_loss_sum = 0.0
+            
+#             with torch.no_grad():
+#                 for images, labels in tqdm(val_loader, desc=f"Epoch {epoch}/{epochs} [Val]"):
+#                     images, labels = images.to(device), labels.to(device)
+#                     outputs = model(images)
+                    
+#                     val_loss_batch = criterion(outputs, labels).item() * images.size(0)
+#                     val_loss_sum += val_loss_batch
+                    
+#                     preds = outputs.argmax(dim=1)
+#                     val_correct += (preds == labels).sum().item()
+            
+#             val_loss = val_loss_sum / val_total
+#             val_acc = 100.0 * val_correct / val_total
+            
+#             # Update scheduler based on validation accuracy
+#             scheduler.step(val_acc)
+
+
+#             if val_acc > best_val_acc:
+#                 best_val_acc = val_acc
+#                 patience_counter = 0
+#                 # Save best model
+#                 torch.save(model.state_dict(), save_path.replace('.pt', '_best_val.pt'))
+#                 print(f"[INFO] New best model saved with validation accuracy: {val_acc:.2f}%")
+#             else:
+#                 patience_counter += 1
+#                 print(f"[INFO] Validation accuracy did not improve. Patience: {patience_counter}/{early_stopping_patience}")
+                
+#                 if patience_counter >= early_stopping_patience:
+#                     print(f"[INFO] Early stopping triggered after {epoch} epochs")
+#                     break         
+        
+#         # Get current learning rate
+#         current_lr = optimizer.param_groups[0]['lr']
+        
+#         # Calculate epoch time
+#         epoch_time = time.time() - epoch_start_time
+        
+#         # ---- RECORD METRICS ----
+#         metrics['epoch'].append(epoch)
+#         metrics['train_loss'].append(train_loss)
+#         metrics['train_acc'].append(train_acc)
+#         metrics['val_loss'].append(val_loss if val_loader else float('nan'))
+#         metrics['val_acc'].append(val_acc if val_loader else float('nan'))
+#         metrics['learning_rate'].append(current_lr)
+#         metrics['time_taken'].append(epoch_time)
+        
+#         # Print metrics
+#         print(f"Epoch {epoch}/{epochs} - Time: {epoch_time:.1f}s")
+#         print(f"  Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%")
+#         if val_loader:
+#             print(f"  Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%")
+#         print(f"  Learning Rate: {current_lr:.6f}")
+        
+#         # Save metrics to CSV after each epoch
+#         csv_path = os.path.dirname(save_path) + '/training_metrics.csv'
+#         pd.DataFrame(metrics).to_csv(csv_path, index=False)
+#         print(f"[INFO] Metrics saved to '{csv_path}'")
+    
+#     print("[INFO] Training complete.")
+    
+#     # Save final model
+#     torch.save(model.state_dict(), save_path)
+#     print(f"[INFO] Final model state_dict saved to '{save_path}'")
+    
+#     return model, metrics
 
 
 # ------------------------------
@@ -310,7 +451,7 @@ def create_results_directory(base_dir=None):
     
     # Create timestamped directory
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_dir = os.path.join(base_dir, f"training_experiment_2_{timestamp}")
+    results_dir = os.path.join(base_dir, f"training_experiment_2_fine_{timestamp}")
     os.makedirs(results_dir, exist_ok=True)
     
     # Create subdirectories
@@ -367,12 +508,13 @@ def run_all_splits(split_list):
     for split_name in split_list:
         # I want this outside the loop
         # Create a unique save path for this split's model
-        print(f" training directory is {train_dir}")
+        # print(f" training directory is {train_dir}")
         
         train_dir = os.path.join(BASE_SYNTH_DIR, split_name) # to change
         # old
         # train_dir = os.path.join(r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\train_splits", split_name)
-        
+        print(f" training directory is {train_dir}")
+
         # Create a unique save path for this split's model
         save_model_path = os.path.join(results_dir["models"], f"enet_b0_{split_name}_finetuned.pt")
         
@@ -406,7 +548,9 @@ def run_all_splits(split_list):
         
         # 4) Optional: Load a separate val set
         try:
-            val_dataset = datasets.ImageFolder(root=os.path.join(BASE_SYNTH_DIR, "val_real"), transform=train_transforms)
+            # val_dataset = datasets.ImageFolder(root=os.path.join(BASE_SYNTH_DIR, "val_real"), transform=train_transforms)
+            
+            val_dataset = datasets.ImageFolder(VAL_DIR, transform=train_transforms)
             print(f"[INFO] Validation dataset size: {len(val_dataset)}")
             val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
         except Exception as e:

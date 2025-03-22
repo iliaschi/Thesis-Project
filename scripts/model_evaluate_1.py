@@ -105,7 +105,7 @@ def main():
     class_names = ["Angry","Contempt","Disgust","Fear","Happiness","Neutral","Sadness","Surprise"]
 
     # We'll create a new folder for these evaluation outputs
-    eval_out_dir = os.path.join(predictions_root, f"evaluation_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    eval_out_dir = os.path.join(predictions_root, f"evaluation_{datetime.now().strftime('%m%d_%H%M%S')}")
     os.makedirs(eval_out_dir, exist_ok=True)
 
     # 2) We iterate each model subfolder
