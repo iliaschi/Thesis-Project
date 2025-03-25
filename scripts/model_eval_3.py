@@ -9,6 +9,9 @@ import json
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import classification_report, confusion_matrix, precision_recall_curve, average_precision_score, roc_curve, auc
 
+# 1) Import the function from your local script
+from json_report_to_latex import json_to_latex
+
 def load_predictions(csv_path):
     """
     Loads the predictions CSV. 
@@ -49,6 +52,176 @@ def build_confusion_matrix(df, class_names, out_path):
     plt.tight_layout()
     plt.savefig(out_path)
     plt.close()
+
+def build_confusion_matrix_2(df_true, df_pred, true_class_names, pred_class_names, out_path):
+    """
+    Build confusion matrix from two dataframes with potentially different numbers of classes.
+    df_true contains the true labels, df_pred contains the predicted labels.
+    true_class_names and pred_class_names can have different lengths.
+    """
+    y_true = df_true['true_idx'].to_numpy()
+    y_pred = df_pred['predicted_idx'].to_numpy()
+    
+    # Get the unique classes for true and predicted
+    true_classes = np.arange(len(true_class_names))
+    pred_classes = np.arange(len(pred_class_names))
+    
+    # Create the confusion matrix with the right dimensions
+    cm = np.zeros((len(true_class_names), len(pred_class_names)), dtype=int)
+    
+    # Fill the confusion matrix manually
+    for i in range(len(y_true)):
+        if y_true[i] < len(true_class_names) and y_pred[i] < len(pred_class_names):
+            cm[y_true[i], y_pred[i]] += 1
+    
+    # Compute row-wise percentages
+    cm_normalized = np.zeros_like(cm, dtype=float)
+    for i in range(cm.shape[0]):
+        row_sum = cm[i].sum()
+        if row_sum > 0:
+            cm_normalized[i] = cm[i] / row_sum * 100
+        else:
+            cm_normalized[i] = 0
+    
+    # Annotate each cell with count and percentage
+    annot = np.empty_like(cm).astype(str)
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            annot[i, j] = f"{cm[i, j]}\n({cm_normalized[i, j]:.1f}%)"
+    
+    fig, ax = plt.subplots(figsize=(10, 7))
+    sns.heatmap(cm, annot=annot, fmt='', 
+                xticklabels=pred_class_names, 
+                yticklabels=true_class_names, 
+                cmap='Blues', ax=ax)
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title("Confusion Matrix (7 True Classes vs 8 Predicted Classes)")
+    plt.tight_layout()
+    plt.savefig(out_path)
+    plt.close()
+    
+    return cm
+
+def compute_classification_metrics_from_scratch(df, class_names, out_json):
+    """
+    Compute precision, recall, f1-score, and accuracy metrics from scratch
+    using a dataframe with 'true_idx' and 'predicted_idx' columns.
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        DataFrame containing 'true_idx' and 'predicted_idx' columns
+    class_names : list
+        List of class names corresponding to indices
+    out_json : str
+        Path to save the computed metrics as JSON
+    """
+    y_true = df['true_idx'].to_numpy()
+    y_pred = df['predicted_idx'].to_numpy()
+    
+    # Create a dictionary to store all metrics
+    report = {
+        "overall": {}
+        ,"per_class": {}
+    }
+    
+    # Compute overall accuracy
+    overall_accuracy = np.mean(y_true == y_pred)
+    report["overall"]["accuracy"] = float(overall_accuracy)
+    
+    # For each class, compute TP, FP, FN, TN
+    for idx, class_name in enumerate(class_names):
+        # Binary classification metrics for this class
+        y_true_binary = (y_true == idx)
+        y_pred_binary = (y_pred == idx)
+        
+        # True positives: correctly predicted as this class
+        tp = np.sum((y_true_binary) & (y_pred_binary))
+        
+        # False positives: incorrectly predicted as this class
+        fp = np.sum((~y_true_binary) & (y_pred_binary))
+        
+        # False negatives: incorrectly predicted as another class
+        fn = np.sum((y_true_binary) & (~y_pred_binary))
+        
+        # True negatives: correctly predicted as not this class
+        tn = np.sum((~y_true_binary) & (~y_pred_binary))
+        
+        # Calculate metrics (handling division by zero)
+        if tp + fp > 0:
+            precision = tp / (tp + fp)
+        else:
+            precision = 0.0
+            
+        if tp + fn > 0:
+            recall = tp / (tp + fn)
+        else:
+            recall = 0.0
+            
+        if precision + recall > 0:
+            f1 = 2 * (precision * recall) / (precision + recall)
+        else:
+            f1 = 0.0
+            
+        # Class-specific accuracy
+        support = np.sum(y_true == idx)
+        if support > 0:
+            class_accuracy = np.sum((y_true == idx) & (y_pred == idx)) / support
+        else:
+            class_accuracy = 0.0
+        
+        # Store metrics for this class
+        report[class_name] = {
+            "precision": float(precision),
+            "recall": float(recall),
+            "f1-score": float(f1),
+            "accuracy": float(class_accuracy),
+            "support": int(support),
+            "tp": int(tp),
+            "fp": int(fp),
+            "fn": int(fn),
+            "tn": int(tn)
+        }
+    
+    # Compute macro and weighted averages
+    precisions = [report[cls]["precision"] for cls in class_names]
+    recalls = [report[cls]["recall"] for cls in class_names]
+    f1s = [report[cls]["f1-score"] for cls in class_names]
+    supports = [report[cls]["support"] for cls in class_names]
+    total_support = sum(supports)
+    
+    # Macro averages (simple mean)
+    report["overall"]["macro avg"] = {
+        "precision": float(np.mean(precisions)),
+        "recall": float(np.mean(recalls)),
+        "f1-score": float(np.mean(f1s)),
+        "support": int(total_support)
+    }
+    
+    # Weighted averages (weighted by support)
+    if total_support > 0:
+        report["overall"]["weighted avg"] = {
+            "precision": float(np.sum(np.array(precisions) * np.array(supports)) / total_support),
+            "recall": float(np.sum(np.array(recalls) * np.array(supports)) / total_support),
+            "f1-score": float(np.sum(np.array(f1s) * np.array(supports)) / total_support),
+            "support": int(total_support)
+        }
+    else:
+        report["overall"]["weighted avg"] = {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 0
+        }
+    
+    # Save to JSON
+    with open(out_json, 'w') as f:
+        json.dump(report, f, indent=4)
+    
+    print(f"[INFO] Wrote classification metrics to {out_json}")
+    
+    return report
 
 
 def classification_report_dict(df, class_names, out_json):
@@ -97,18 +270,70 @@ def classification_report_dict(df, class_names, out_json):
 #         json.dump(report, f, indent=4)
 #     print(f"[INFO] Wrote classification report => {out_json}")
 
+# 8 Classes reliability
+# def reliability_diagram(df, class_names, out_path, n_bins=10):
+#     """
+#     Build a reliability diagram across the entire dataset.
+#     """
+#     y_true = df['true_idx'].to_numpy()
+#     prob_array = []
+#     for row in df.itertuples():
+#         row_probs = []
+#         for cname in class_names:
+#             col_name = f"prob_{cname}"
+#             row_probs.append(getattr(row, col_name))
+#         prob_array.append(row_probs)
+#     prob_array = np.array(prob_array)  # shape(N, C)
+
+#     correct_probs = []
+#     correct_or_not = []
+#     for i in range(len(prob_array)):
+#         gt = y_true[i]
+#         p  = prob_array[i, gt]
+#         correct_probs.append(p)
+#         pred_idx = np.argmax(prob_array[i])
+#         correct_or_not.append(1 if pred_idx == gt else 0)
+
+#     correct_probs = np.array(correct_probs)
+#     correct_or_not = np.array(correct_or_not)
+#     prob_true, prob_pred = calibration_curve(correct_or_not, correct_probs, n_bins=n_bins)
+
+#     plt.figure()
+#     plt.plot(prob_pred, prob_true, 'o-', label='Model')
+#     plt.plot([0,1],[0,1], '--', color='gray', label='Perfect')
+#     plt.xlabel("Predicted Probability")
+#     plt.ylabel("True Probability")
+#     plt.title("Reliability Diagram")
+#     plt.legend()
+#     plt.tight_layout()
+#     plt.savefig(out_path)
+#     plt.close()
 
 def reliability_diagram(df, class_names, out_path, n_bins=10):
     """
     Build a reliability diagram across the entire dataset.
     """
     y_true = df['true_idx'].to_numpy()
+    
+    # Add this check to filter out indices that are beyond the class_names list
+    valid_indices = y_true < len(class_names)
+    if not all(valid_indices):
+        print(f"[WARNING] Found {np.sum(~valid_indices)} samples with class indices outside the range of class_names. These will be excluded.")
+        df_filtered = df[valid_indices].copy()
+        y_true = df_filtered['true_idx'].to_numpy()
+    else:
+        df_filtered = df
+        
     prob_array = []
-    for row in df.itertuples():
+    for row in df_filtered.itertuples():
         row_probs = []
         for cname in class_names:
             col_name = f"prob_{cname}"
-            row_probs.append(getattr(row, col_name))
+            if hasattr(row, col_name):
+                row_probs.append(getattr(row, col_name))
+            else:
+                print(f"[WARNING] Column {col_name} not found, using 0.0 as probability")
+                row_probs.append(0.0)
         prob_array.append(row_probs)
     prob_array = np.array(prob_array)  # shape(N, C)
 
@@ -116,11 +341,12 @@ def reliability_diagram(df, class_names, out_path, n_bins=10):
     correct_or_not = []
     for i in range(len(prob_array)):
         gt = y_true[i]
-        p  = prob_array[i, gt]
+        p = prob_array[i, gt]
         correct_probs.append(p)
         pred_idx = np.argmax(prob_array[i])
         correct_or_not.append(1 if pred_idx == gt else 0)
 
+    # Rest of the function remains the same
     correct_probs = np.array(correct_probs)
     correct_or_not = np.array(correct_or_not)
     prob_true, prob_pred = calibration_curve(correct_or_not, correct_probs, n_bins=n_bins)
@@ -266,15 +492,64 @@ def plot_roc_curves(df, class_names, out_path):
     plt.close()
     print(f"[INFO] ROC curves saved at {out_path}")
 
+def filter_dataframe_by_emotions(df, class_names):
+    """
+    Filter a dataframe to only include rows where true_emotion and predicted_emotion are in class_names.
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        The dataframe containing prediction results
+    class_names : list
+        List of emotion class names to keep
+    
+    Returns:
+    --------
+    pandas.DataFrame
+        Filtered dataframe
+    """
+    # Filter rows where true_emotion is in class_names
+    filtered_df = df[df['true_emotion'].isin(class_names)].copy()
+    
+    # Create a mapping from old emotion names to indices
+    emotion_to_idx = {emotion: i for i, emotion in enumerate(class_names)}
+    
+    # Update the indices to match the new ordering
+    filtered_df['true_idx'] = filtered_df['true_emotion'].map(emotion_to_idx)
+    filtered_df['predicted_idx'] = filtered_df['predicted_emotion'].map(
+        lambda x: emotion_to_idx.get(x, -1) if x in class_names else -1
+    )
+    
+    # Optionally update 'correct' column based on new indices
+    filtered_df['correct'] = filtered_df['true_idx'] == filtered_df['predicted_idx']
+    
+    # Remove rows where predicted_emotion isn't in class_names (optional)
+    # filtered_df = filtered_df[filtered_df['predicted_emotion'].isin(class_names)]
+    
+    print(f"[INFO] Filtered {len(df) - len(filtered_df)} rows. {len(filtered_df)} rows remaining.")
+    return filtered_df
+
 
 def main():
     # 1) Root folder for all prediction outputs.
 
     # ----- Baseline Model on full test data -----
     # Baseline on real
-    predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\Affect_Net_base_ok\predictions_combined_real_19_2330_OK"
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\Affect_Net_base_ok\predictions_combined_real_19_2330_OK"
     # Baseline on synt
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\Affect_Net_base_ok\predictions_combined_synth_0319_2343_OK"
+    
+    # Fine dropout 0.3
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_22_1652do03\predictions_combined_synth_on_real_2_0322_195723"
+    # Fine drop 0.5
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_22_1831do05\pred_comb_sy_on_re_2_0322_2015"
+    # Fine drop 0.1
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_1912_dr01\pred_comb_sy_on_re_2_0322_2019"
+    # Fine drop 0 new class
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2031\pred_comb_sy_on_re_2_0322_2214"
+    # Fine drop 0 full 40 new classi
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2230_drop0_OK\pred_comb_sy_on_re_2_0323_0021"
+                        
 
     # ----- Finetuned Model on full test data -----
     # Finetuned on real # C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_fine_20250319_040801\predictions_on_real_20250319_174546
@@ -293,10 +568,20 @@ def main():
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_1223synthetic_on_vggface2_gender\gender_splits_w_100_real"
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_on_real_2_0320_1139\gen_m_f_fine_real"
 
+    # Fine Real gender men
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_real_genders\gen_m_f_fine_real"
+    # Fine Real gender women
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_real_genders\gen_w_f_fine_real"
+    # Fune synnth gender women
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_synth_genders\fine_synth_wom"
+    # Fine synth gender men
+    predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_synth_genders\pred_fine_synth_men"
+
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\predictions_combined_synth_on_real_2"
     
     # The classes in the same order as during training.
     class_names = ["Angry", "Contempt", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"]
+    class_names_7 = ["Angry", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"]
 
     # Create a new folder for evaluation outputs.
     eval_out_dir = os.path.join(predictions_root, f"evaluation_{datetime.now().strftime('%m%d_%H%M%S')}")
@@ -316,12 +601,18 @@ def main():
             print(f"[WARNING] No combined_results.csv found in {model_path}, skipping.")
             continue
 
+
         print(f"\n============================")
         print(f"[INFO] Evaluating {model_folder}'s combined_results.csv")
         df = load_predictions(combined_csv)
         if len(df) == 0:
             print(f"[WARNING] CSV is empty => {combined_csv}")
             continue
+
+        
+        df_filtered = filter_dataframe_by_emotions(df, class_names_7)
+        
+
 
         # Create a subfolder for evaluation outputs for this model.
         model_eval_dir = os.path.join(eval_out_dir, model_folder)
@@ -330,27 +621,94 @@ def main():
         # (a) Confusion matrix with normalization.
         cm_path = os.path.join(model_eval_dir, "confusion_matrix.png")
         build_confusion_matrix(df, class_names, cm_path)
+
+        # (a7) Confusion matrix with normalization.
+        cm_path = os.path.join(model_eval_dir, "confusion_matrix_7.png")
+        build_confusion_matrix(df_filtered, class_names_7, cm_path)
+
+        
+        # (a78) Confusion matrix with normalization.
+        cm_path = os.path.join(model_eval_dir, "confusion_matrix_78.png")
+        build_confusion_matrix_2(df_filtered,df, class_names_7,class_names, cm_path)
         
         # (b) Classification report.
         cr_json = os.path.join(model_eval_dir, "classification_report.json")
+        cr_json_full = os.path.join(model_eval_dir, "classification_report_full.json")
         classification_report_dict(df, class_names, cr_json)
+        compute_classification_metrics_from_scratch(df, class_names, cr_json_full)
         
+        # (b7) Classification report.
+        cr_json_7 = os.path.join(model_eval_dir, "classification_report_7.json")
+        cr_json_full_7 = os.path.join(model_eval_dir, "classification_report_full_7.json")
+        classification_report_dict(df_filtered, class_names_7, cr_json_7)
+        compute_classification_metrics_from_scratch(df_filtered, class_names_7, cr_json_full_7)
+
+
+        # NEW STEP: generate LaTeX from classification_report.json
+        latex_code = json_to_latex(
+            json_file=cr_json, 
+            table_caption="Classification Report", 
+            table_label="tab:classification_report"
+        )
+        latex_outfile = os.path.join(model_eval_dir, "clas_rep_ltx.txt")
+        with open(latex_outfile, "w", encoding="utf-8") as f:
+            f.write(latex_code)
+        print(f"[INFO] Wrote LaTeX code to => {latex_outfile}")
+
+        # Latex Report txt 7
+        # NEW STEP: generate LaTeX from classification_report.json
+        latex_code = json_to_latex(
+            json_file=cr_json_7, 
+            table_caption="Classification Report", 
+            table_label="tab:classification_report"
+        )
+        latex_outfile = os.path.join(model_eval_dir, "clas_rep_ltx_7.txt")
+        with open(latex_outfile, "w", encoding="utf-8") as f:
+            f.write(latex_code)
+        print(f"[INFO] Wrote LaTeX code to => {latex_outfile}")
+        
+
+        # ----- Reliability diagram -----
         # (c) Reliability diagram.
         rd_path = os.path.join(model_eval_dir, "reliability_diagram.png")
         reliability_diagram(df, class_names, rd_path, n_bins=10)
+
+        # (c7) Reliability diagram.
+        rd_path_7 = os.path.join(model_eval_dir, "reliability_diagram_7.png")
+        reliability_diagram(df_filtered, class_names_7, rd_path_7, n_bins=10)
+
         
+        # ----- Precision Recall diagram -----
         # (d) Precision-Recall curves.
         pr_curve_path = os.path.join(model_eval_dir, "precision_recall_curves.png")
         plot_precision_recall_curves(df, class_names, pr_curve_path)
 
+        # (d7) Precision-Recall curves.
+        pr_curve_path_7 = os.path.join(model_eval_dir, "precision_recall_curves_7.png")
+        plot_precision_recall_curves(df_filtered, class_names_7, pr_curve_path_7)
+
+
+        # ----- Confidence Histogram -----
         # (e) Confidence Histogram (new).
         conf_hist_path = os.path.join(model_eval_dir, "confidence_histograms.png")
         plot_confidence_histograms(df, class_names, conf_hist_path, bins=20)
+
+        # (e7) Confidence Histogram (new).
+        conf_hist_path_7 = os.path.join(model_eval_dir, "confidence_histograms_7.png")
+        plot_confidence_histograms(df_filtered, class_names_7, conf_hist_path_7, bins=20)
         
+
+        # ----- ROC Curves -----
         # (f) ROC Curves and AUC (new).
         roc_curve_path = os.path.join(model_eval_dir, "roc_curves.png")
         plot_roc_curves(df, class_names, roc_curve_path)
 
+        # (f7 ROC Curves and AUC (new).
+        roc_curve_path_7 = os.path.join(model_eval_dir, "roc_curves_7.png")
+        plot_roc_curves(df_filtered, class_names_7, roc_curve_path_7)
+
+
+        # --- Optional: Confidence distribution plot ---
         # (e) Optional: Confidence distribution plot.
         df_correct = df[df['correct'] == True]
         df_wrong   = df[df['correct'] == False]
@@ -364,6 +722,21 @@ def main():
             plt.savefig(confdist_path)
             plt.close()
 
+        # (e7) Optional: Confidence distribution plot.
+        df_correct_7 = df_filtered[df_filtered['correct'] == True]
+        df_wrong_7   = df_filtered[df_filtered['correct'] == False]
+        if len(df_correct_7) > 0 and len(df_wrong_7) > 0:
+            plt.figure()
+            sns.kdeplot(df_correct_7['confidence'], label='Correct')
+            sns.kdeplot(df_wrong_7['confidence'], label='Incorrect')
+            plt.title("Confidence Distribution")
+            plt.legend()
+            confdist_path_7 = os.path.join(model_eval_dir, "confidence_distribution_7.png")
+            plt.savefig(confdist_path_7)
+            plt.close()
+
+
+        # ----- Accuracy -----
         # 3) Compute overall and per-emotion accuracy.
         overall_acc, emotion_acc = compute_accuracy_metrics(df, class_names)
         # 3b) Compute Top-2 accuracy.

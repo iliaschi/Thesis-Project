@@ -1,0 +1,74 @@
+{
+    "Angry": {
+        "precision": 0.4518229166666667,
+        "recall": 0.7995391705069125,
+        "f1-score": 0.5773710482529119,
+        "support": 434.0
+    },
+    "Contempt": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+    },
+    "Disgust": {
+        "precision": 0.6651162790697674,
+        "recall": 0.35049019607843135,
+        "f1-score": 0.4590690208667737,
+        "support": 408.0
+    },
+    "Fear": {
+        "precision": 0.5,
+        "recall": 0.6872964169381107,
+        "f1-score": 0.578875171467764,
+        "support": 307.0
+    },
+    "Happiness": {
+        "precision": 0.9238625812441968,
+        "recall": 0.8396624472573839,
+        "f1-score": 0.8797524314765695,
+        "support": 1185.0
+    },
+    "Neutral": {
+        "precision": 0.7756653992395437,
+        "recall": 0.6,
+        "f1-score": 0.6766169154228856,
+        "support": 680.0
+    },
+    "Sadness": {
+        "precision": 0.647244094488189,
+        "recall": 0.8598326359832636,
+        "f1-score": 0.738544474393531,
+        "support": 478.0
+    },
+    "Surprise": {
+        "precision": 0.7923076923076923,
+        "recall": 0.3130699088145897,
+        "f1-score": 0.44880174291938996,
+        "support": 329.0
+    },
+    "accuracy": 0.6851609526302015,
+    "macro avg": {
+        "precision": 0.594502370377007,
+        "recall": 0.5562363469473364,
+        "f1-score": 0.5448788505999782,
+        "support": 3821.0
+    },
+    "weighted avg": {
+        "precision": 0.7362575571540556,
+        "recall": 0.6851609526302015,
+        "f1-score": 0.6853912690562406,
+        "support": 3821.0
+    },
+    "overall_accuracy": 68.51609526302015,
+    "per_emotion_accuracy": {
+        "Angry": 79.95391705069125,
+        "Contempt": NaN,
+        "Disgust": 35.049019607843135,
+        "Fear": 68.72964169381108,
+        "Happiness": 83.96624472573839,
+        "Neutral": 60.0,
+        "Sadness": 85.98326359832636,
+        "Surprise": 31.306990881458965
+    }
+}

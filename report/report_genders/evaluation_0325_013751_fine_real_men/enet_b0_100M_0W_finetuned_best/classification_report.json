@@ -1,0 +1,74 @@
+{
+    "Angry": {
+        "precision": 0.58,
+        "recall": 0.1336405529953917,
+        "f1-score": 0.21722846441947566,
+        "support": 434.0
+    },
+    "Contempt": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+    },
+    "Disgust": {
+        "precision": 0.3062953995157385,
+        "recall": 0.6200980392156863,
+        "f1-score": 0.4100486223662885,
+        "support": 408.0
+    },
+    "Fear": {
+        "precision": 0.8333333333333334,
+        "recall": 0.3583061889250814,
+        "f1-score": 0.5011389521640092,
+        "support": 307.0
+    },
+    "Happiness": {
+        "precision": 0.8813387423935092,
+        "recall": 0.7333333333333333,
+        "f1-score": 0.8005527406725012,
+        "support": 1185.0
+    },
+    "Neutral": {
+        "precision": 0.6280587275693311,
+        "recall": 0.5661764705882353,
+        "f1-score": 0.5955143078112916,
+        "support": 680.0
+    },
+    "Sadness": {
+        "precision": 0.6415841584158416,
+        "recall": 0.6778242677824268,
+        "f1-score": 0.659206510681587,
+        "support": 478.0
+    },
+    "Surprise": {
+        "precision": 0.5853658536585366,
+        "recall": 0.729483282674772,
+        "f1-score": 0.6495263870094723,
+        "support": 329.0
+    },
+    "accuracy": 0.5859722585710547,
+    "macro avg": {
+        "precision": 0.5569970268607862,
+        "recall": 0.4773577669393658,
+        "f1-score": 0.47915199814057813,
+        "support": 3821.0
+    },
+    "weighted avg": {
+        "precision": 0.6813009145238521,
+        "recall": 0.5859722585710547,
+        "f1-score": 0.601367775513833,
+        "support": 3821.0
+    },
+    "overall_accuracy": 58.59722585710547,
+    "per_emotion_accuracy": {
+        "Angry": 13.36405529953917,
+        "Contempt": NaN,
+        "Disgust": 62.009803921568626,
+        "Fear": 35.83061889250814,
+        "Happiness": 73.33333333333333,
+        "Neutral": 56.61764705882353,
+        "Sadness": 67.78242677824268,
+        "Surprise": 72.94832826747721
+    }
+}

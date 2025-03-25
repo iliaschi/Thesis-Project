@@ -135,9 +135,21 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
     # Set model weights directory (update as needed).
+    
     # Affect Net : C:\Users\ilias\Python\Thesis-Project\results\Affect_Net_base\model
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\Affect_Net_base\model"
-
+    
+    # Fine drop 0.3
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_22_1652do03\models"
+    # Fine drop 0.5
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_22_1831do05\models"
+    # Fine drop 0.1
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_1912_dr01\models"
+    # Fine drop 0 new classifier
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2031\models"
+    # Fine drop 0 full 40
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2230\models"
+    
     # Synthetic model
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\models"
 
@@ -145,7 +157,16 @@ def main():
     # synth
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_1223synthetic_on_vggface2_gender\models"
     #real
-    model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\models"
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\models"
+
+    # Fraction 0.25
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0201frac025\models"
+    # Fraction 0.5
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0154_frac05\models"
+    # Fraction 0.75
+    model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0131_fract0.75\models"
+
+    
     
     # Set the combined test folder (output from your combine script).
     # test_folder = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\synth_100_combined"
@@ -159,8 +180,8 @@ def main():
     print(model_parent_dir)
     global_out_dir = model_parent_dir
 
-    timestamp = datetime.now().strftime("%m%d_%H%M%S")
-    overall_dir = os.path.join(global_out_dir, f"predictions_combined_synth_on_real_2_{timestamp}")
+    timestamp = datetime.now().strftime("%m%d_%H%M")
+    overall_dir = os.path.join(global_out_dir, f"pred_comb_sy_on_re_2_{timestamp}")
     os.makedirs(overall_dir, exist_ok=True)
     
     # Define the class mapping.
