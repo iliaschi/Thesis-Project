@@ -10,7 +10,8 @@ from sklearn.calibration import calibration_curve
 from sklearn.metrics import classification_report, confusion_matrix, precision_recall_curve, average_precision_score, roc_curve, auc
 
 # 1) Import the function from your local script
-from json_report_to_latex import json_to_latex
+from json_report_to_latex import json_to_latex, json_to_latex_scratch, json_to_latex_single_table
+from general_plots import *
 
 def load_predictions(csv_path):
     """
@@ -123,7 +124,6 @@ def compute_classification_metrics_from_scratch(df, class_names, out_json):
     # Create a dictionary to store all metrics
     report = {
         "overall": {}
-        ,"per_class": {}
     }
     
     # Compute overall accuracy
@@ -178,10 +178,10 @@ def compute_classification_metrics_from_scratch(df, class_names, out_json):
             "f1-score": float(f1),
             "accuracy": float(class_accuracy),
             "support": int(support),
-            "tp": int(tp),
-            "fp": int(fp),
-            "fn": int(fn),
-            "tn": int(tn)
+            "True Positives": int(tp),
+            "False Positives": int(fp),
+            "False Negatives": int(fn),
+            "True Negatives": int(tn)
         }
     
     # Compute macro and weighted averages
@@ -429,42 +429,95 @@ def compute_top_k_accuracy(df, class_names, k=2):
     return overall_topk_acc, emotion_topk_acc
 
 
-def plot_confidence_histograms(df, class_names, out_path, bins=20):
+# def plot_confidence_histograms(df, class_names, out_path, bins=20):
+#     """
+#     Create subplots for each emotion showing histograms of confidence values.
+#     For each emotion, we plot the confidence for correct and incorrect predictions.
+#     """
+#     num_classes = len(class_names)
+#     # Create a subplot grid: for 8 classes, 2 rows x 4 columns
+#     nrows = 2
+#     ncols = 4
+#     fig, axes = plt.subplots(nrows, ncols, figsize=(20, 10), sharex=True, sharey=True)
+#     axes = axes.flatten()
+    
+#     for i, emotion in enumerate(class_names):
+#         ax = axes[i]
+#         # Filter rows for this emotion (using true_emotion column)
+#         df_emotion = df[df['true_emotion'] == emotion]
+#         if df_emotion.empty:
+#             ax.text(0.5, 0.5, "No data", horizontalalignment='center', verticalalignment='center')
+#             ax.set_title(emotion)
+#             continue
+        
+#         # Plot histogram with hue for correct (True/False)
+#         sns.histplot(data=df_emotion, x="confidence", hue="correct",
+#                      bins=bins, element="step", stat="density", common_norm=False, ax=ax)
+#         ax.set_title(emotion)
+#         ax.set_xlim(0, 1)
+    
+#     # Remove any unused subplots
+#     for j in range(i+1, len(axes)):
+#         fig.delaxes(axes[j])
+    
+#     plt.suptitle("Confidence Histograms per Emotion", fontsize=18)
+#     plt.tight_layout(rect=[0, 0, 1, 0.95])
+#     plt.savefig(out_path, bbox_inches='tight')
+#     plt.close()
+#     print(f"[INFO] Confidence histogram saved at {out_path}")
+
+def plot_confidence_histograms(df, class_names, out_path, bins=10):
     """
-    Create subplots for each emotion showing histograms of confidence values.
-    For each emotion, we plot the confidence for correct and incorrect predictions.
+    Create subplots for each emotion showing two overlaid density curves of confidence:
+      - One for correct predictions
+      - One for incorrect predictions
+    Each curve is normalized to an area of 1 within that subplot.
     """
-    num_classes = len(class_names)
-    # Create a subplot grid: for 8 classes, 2 rows x 4 columns
-    nrows = 2
-    ncols = 4
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    
+    nrows, ncols = 2, 4  # for 8 emotions => 2x4 grid
     fig, axes = plt.subplots(nrows, ncols, figsize=(20, 10), sharex=True, sharey=True)
     axes = axes.flatten()
     
     for i, emotion in enumerate(class_names):
         ax = axes[i]
-        # Filter rows for this emotion (using true_emotion column)
+        
+        # Filter data for this emotion only
         df_emotion = df[df['true_emotion'] == emotion]
         if df_emotion.empty:
-            ax.text(0.5, 0.5, "No data", horizontalalignment='center', verticalalignment='center')
+            ax.text(0.5, 0.5, "No data", ha='center', va='center')
             ax.set_title(emotion)
             continue
         
-        # Plot histogram with hue for correct (True/False)
-        sns.histplot(data=df_emotion, x="confidence", hue="correct",
-                     bins=bins, element="step", stat="density", common_norm=False, ax=ax)
+        # Plot two overlaid density curves (correct vs. incorrect),
+        # each normalized so area = 1 in that subplot.
+        sns.histplot(
+            data=df_emotion,
+            x="confidence",
+            hue="correct",
+            bins=bins,
+            element="step",     # Draw outlines instead of filled bars
+            stat="probability",     # Compute density (probability) instead of counts
+            multiple="layer",   # Overlaid curves
+            common_norm=False,  # Each hue level (correct vs. incorrect) normalized separately
+            ax=ax
+        )
+        
         ax.set_title(emotion)
         ax.set_xlim(0, 1)
-    
-    # Remove any unused subplots
-    for j in range(i+1, len(axes)):
+
+    # Remove unused axes if there are fewer than 2*4 classes
+    for j in range(i + 1, len(axes)):
         fig.delaxes(axes[j])
     
-    plt.suptitle("Confidence Histograms per Emotion", fontsize=18)
+    plt.suptitle("Per-Emotion Confidence Density (Correct vs. Incorrect)", fontsize=18)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.savefig(out_path, bbox_inches='tight')
     plt.close()
     print(f"[INFO] Confidence histogram saved at {out_path}")
+
+
 
 #########################
 # NEW: ROC Curves and AUC per Emotion
@@ -491,6 +544,145 @@ def plot_roc_curves(df, class_names, out_path):
     plt.savefig(out_path, bbox_inches='tight')
     plt.close()
     print(f"[INFO] ROC curves saved at {out_path}")
+
+
+
+# def plot_individual_per_emotion_accuracy(model_eval_dir, model_folder, metrics_entry, class_names):
+#     """
+#     Creates and saves a single bar plot of per-emotion accuracy for one model.
+#     """
+#     # Extract accuracies for each emotion
+#     accuracies = [metrics_entry[f'accuracy_{emotion}'] for emotion in class_names]
+    
+#     # Create the figure
+#     plt.figure(figsize=(8, 6))
+#     sns.barplot(x=class_names, y=accuracies, palette=sns.color_palette("Paired", len(class_names)))
+#     plt.title(f'Per-Emotion Accuracy for {model_folder}')
+#     plt.ylabel('Accuracy (%)')
+#     plt.xlabel('Emotion')
+#     plt.tight_layout()
+
+#     # Save the plot
+#     individual_plot_path = os.path.join(model_eval_dir, f"per_emotion_accuracy_{model_folder}.png")
+#     plt.savefig(individual_plot_path)
+#     plt.close()
+#     print(f"[INFO] Individual per-emotion bar plot saved at {individual_plot_path}")
+
+# def plot_global_overall_accuracy(eval_out_dir, global_metrics_df):
+#     """
+#     Creates and saves a bar plot showing overall accuracy for each model in global_metrics_df.
+#     """
+#     plt.figure(figsize=(10, 6))
+#     sns.barplot(x='model_folder', y='overall_accuracy', data=global_metrics_df,
+#                 palette=sns.color_palette("Paired", len(global_metrics_df)))
+#     plt.xticks(rotation=90)
+#     plt.title('Overall Accuracy Comparison')
+#     plt.ylabel('Overall Accuracy (%)')
+#     plt.xlabel('Model Folder')
+#     plt.tight_layout()
+
+#     overall_barplot_path = os.path.join(eval_out_dir, "overall_accuracy_barplot.png")
+#     plt.savefig(overall_barplot_path)
+#     plt.close()
+#     print(f"[INFO] Overall accuracy bar plot saved at {overall_barplot_path}")
+
+# def plot_global_per_emotion_accuracy(eval_out_dir, global_metrics_df, class_names):
+#     """
+#     Creates and saves a grouped bar plot comparing per-emotion accuracy across models.
+#     """
+#     emotion_columns = [f'accuracy_{emotion}' for emotion in class_names]
+#     # Melt into long form
+#     global_metrics_long = pd.melt(global_metrics_df,
+#                                   id_vars=['model_folder', 'overall_accuracy'],
+#                                   value_vars=emotion_columns,
+#                                   var_name='emotion', value_name='accuracy')
+#     # Remove the prefix from 'accuracy_'
+#     global_metrics_long['emotion'] = global_metrics_long['emotion'].str.replace('accuracy_', '')
+
+#     plt.figure(figsize=(16, 16))
+#     ax = sns.barplot(
+#         x='model_folder',
+#         y='accuracy',
+#         hue='emotion',
+#         data=global_metrics_long,
+#         palette=sns.color_palette("Paired", len(global_metrics_long['emotion'].unique()))
+#     )
+#     plt.xticks(rotation=90)
+#     plt.title('Per-Emotion Accuracy Comparison')
+#     plt.ylabel('Accuracy (%)')
+#     plt.xlabel('Model Folder')
+#     ax.set_ylim(0, 100)
+#     ax.legend(loc='upper right', bbox_to_anchor=(1, 1), title="Emotion")
+#     plt.tight_layout()
+
+#     per_emotion_barplot_path = os.path.join(eval_out_dir, "per_emotion_accuracy_barplot.png")
+#     plt.savefig(per_emotion_barplot_path, bbox_inches='tight')
+#     plt.close()
+#     print(f"[INFO] Per-emotion accuracy bar plot saved at {per_emotion_barplot_path}")
+
+# def plot_global_top2_accuracy(eval_out_dir, global_metrics_df, class_names):
+#     """
+#     Creates and saves a grouped bar plot for per-emotion Top-2 accuracy across models.
+#     """
+#     emotion_columns_top2 = [f'top2_accuracy_{emotion}' for emotion in class_names]
+#     global_metrics_long_top2 = pd.melt(global_metrics_df,
+#                                        id_vars=['model_folder'],
+#                                        value_vars=emotion_columns_top2,
+#                                        var_name='emotion', value_name='top2_accuracy')
+#     global_metrics_long_top2['emotion'] = global_metrics_long_top2['emotion'].str.replace('top2_accuracy_', '')
+
+#     plt.figure(figsize=(16, 16))
+#     ax = sns.barplot(
+#         x='model_folder',
+#         y='top2_accuracy',
+#         hue='emotion',
+#         data=global_metrics_long_top2,
+#         palette=sns.color_palette("Paired", len(global_metrics_long_top2['emotion'].unique()))
+#     )
+#     plt.xticks(rotation=90)
+#     plt.title('Per-Emotion Top-2 Accuracy Comparison')
+#     plt.ylabel('Top-2 Accuracy (%)')
+#     plt.xlabel('Model Folder')
+#     ax.set_ylim(0, 100)
+#     ax.legend(loc='upper left', bbox_to_anchor=(0, 1), title="Emotion")
+#     plt.tight_layout()
+
+#     top2_barplot_path = os.path.join(eval_out_dir, "per_emotion_top2_accuracy_barplot.png")
+#     plt.savefig(top2_barplot_path, bbox_inches='tight')
+#     plt.close()
+#     print(f"[INFO] Per-emotion Top-2 accuracy bar plot saved at {top2_barplot_path}")
+
+# def plot_global_nll(eval_out_dir, global_metrics_df, class_names):
+#     """
+#     Creates and saves a grouped bar plot for per-emotion average Negative Log Likelihood (NLL).
+#     """
+#     emotion_columns_nll = [f'nll_{emotion}' for emotion in class_names]
+#     global_metrics_long_nll = pd.melt(global_metrics_df,
+#                                       id_vars=['model_folder'],
+#                                       value_vars=emotion_columns_nll,
+#                                       var_name='emotion', value_name='avg_nll')
+#     global_metrics_long_nll['emotion'] = global_metrics_long_nll['emotion'].str.replace('nll_', '')
+
+#     plt.figure(figsize=(16, 16))
+#     ax = sns.barplot(
+#         x='model_folder',
+#         y='avg_nll',
+#         hue='emotion',
+#         data=global_metrics_long_nll,
+#         palette=sns.color_palette("Paired", len(global_metrics_long_nll['emotion'].unique()))
+#     )
+#     plt.xticks(rotation=90)
+#     plt.title('Per-Emotion Average Negative Log Likelihood (NLL) Comparison')
+#     plt.ylabel('Average NLL')
+#     plt.xlabel('Model Folder')
+#     ax.legend(loc='upper left', bbox_to_anchor=(0, 1), title="Emotion")
+#     plt.tight_layout()
+
+#     nll_barplot_path = os.path.join(eval_out_dir, "per_emotion_nll_barplot.png")
+#     plt.savefig(nll_barplot_path, bbox_inches='tight')
+#     plt.close()
+#     print(f"[INFO] Per-emotion NLL bar plot saved at {nll_barplot_path}")
+
 
 def filter_dataframe_by_emotions(df, class_names):
     """
@@ -539,6 +731,7 @@ def main():
     # Baseline on synt
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\Affect_Net_base_ok\predictions_combined_synth_0319_2343_OK"
     
+    
     # Fine dropout 0.3
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_22_1652do03\predictions_combined_synth_on_real_2_0322_195723"
     # Fine drop 0.5
@@ -547,8 +740,10 @@ def main():
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_1912_dr01\pred_comb_sy_on_re_2_0322_2019"
     # Fine drop 0 new class
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2031\pred_comb_sy_on_re_2_0322_2214"
-    # Fine drop 0 full 40 new classi
+    # Fine drop 0 full 40 new classi on real
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2230_drop0_OK\pred_comb_sy_on_re_2_0323_0021"
+    # Fine drop 0 full 40 on synth
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2230_drop0_OK\pred_comb_fi_on_sy_2_0326_0133"
                         
 
     # ----- Finetuned Model on full test data -----
@@ -559,9 +754,10 @@ def main():
     # ----- Synthetic Model on full test data -----
     # Synthetic on synth
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\predictions_combined_synth_on_synth_0320_023947"
-    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\predictions_combined_synth_on_synth_0320_023947"
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\pred_comb_syn_on_syn_0320_0239"
     # Synthetic on real
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\predictions_combined_synth_on_real_0320_024137"
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\pred_c_sy_on_re_0320_0241"
 
     # ----- Gender Splits -----
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_1223synthetic_on_vggface2_gender\gender_splits_m_100_real"
@@ -575,7 +771,20 @@ def main():
     # Fune synnth gender women
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_synth_genders\fine_synth_wom"
     # Fine synth gender men
-    predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_synth_genders\pred_fine_synth_men"
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_synth_genders\pred_fine_synth_men"
+    # Fine Real men classifier only
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\pred_gend_real\pred_gend_real_men"
+    # Fine Real women classifier only
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\pred_gend_real\pred_gend_real_wom"
+    # Fine Synth men classifier only
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\pred_gend_synth\pred_csv_men_synth"
+    # Fine Synth women classifier only
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\pred_gend_synth\pred_csv_wom_synth"
+
+    # Fractions all 
+    predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fractions\frac_preds"
+    # Fraction 0.25
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0201frac025\pred_comb_sy_on_re_2_0325_0156"
 
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\predictions_combined_synth_on_real_2"
     
@@ -631,6 +840,8 @@ def main():
         cm_path = os.path.join(model_eval_dir, "confusion_matrix_78.png")
         build_confusion_matrix_2(df_filtered,df, class_names_7,class_names, cm_path)
         
+
+        # ----- Classification Report Metrics ------
         # (b) Classification report.
         cr_json = os.path.join(model_eval_dir, "classification_report.json")
         cr_json_full = os.path.join(model_eval_dir, "classification_report_full.json")
@@ -640,11 +851,12 @@ def main():
         # (b7) Classification report.
         cr_json_7 = os.path.join(model_eval_dir, "classification_report_7.json")
         cr_json_full_7 = os.path.join(model_eval_dir, "classification_report_full_7.json")
+        # computing metrics
         classification_report_dict(df_filtered, class_names_7, cr_json_7)
         compute_classification_metrics_from_scratch(df_filtered, class_names_7, cr_json_full_7)
 
 
-        # NEW STEP: generate LaTeX from classification_report.json
+        # ----- NEW STEP: generate LaTeX from classification_report.json ------
         latex_code = json_to_latex(
             json_file=cr_json, 
             table_caption="Classification Report", 
@@ -655,18 +867,40 @@ def main():
             f.write(latex_code)
         print(f"[INFO] Wrote LaTeX code to => {latex_outfile}")
 
+
         # Latex Report txt 7
         # NEW STEP: generate LaTeX from classification_report.json
-        latex_code = json_to_latex(
+        latex_code_7 = json_to_latex(
             json_file=cr_json_7, 
             table_caption="Classification Report", 
-            table_label="tab:classification_report"
+            table_label="tab:classification_report_7"
         )
-        latex_outfile = os.path.join(model_eval_dir, "clas_rep_ltx_7.txt")
-        with open(latex_outfile, "w", encoding="utf-8") as f:
-            f.write(latex_code)
-        print(f"[INFO] Wrote LaTeX code to => {latex_outfile}")
+        latex_outfile_7 = os.path.join(model_eval_dir, "clas_rep_ltx_7.txt")
+        with open(latex_outfile_7, "w", encoding="utf-8") as f:
+            f.write(latex_code_7)
+        print(f"[INFO] Wrote LaTeX code to => {latex_outfile_7}")
         
+
+        #Full latex report
+        latex_code_full = json_to_latex_scratch(
+            json_file=cr_json_full,
+            table_caption="Classification Metrics All",
+            table_label="tab:scratch_metrics_class"
+        )
+        latex_outfile_full = os.path.join(model_eval_dir, "clas_rep_ltx_full.txt")
+        with open(latex_outfile_full, "w", encoding="utf-8") as f:
+            f.write(latex_code_full)
+        print("LaTeX table saved to scratch_metrics_table.tex")
+
+        latex_code_sg = json_to_latex_single_table(
+            json_file=cr_json_full,
+            table_caption="Classification Metrics All",
+            table_label="tab:scratch_metrics_class"
+        )
+        latex_outfile_sg = os.path.join(model_eval_dir, "clas_rep_ltx_single.txt")
+        with open(latex_outfile_sg, "w", encoding="utf-8") as f:
+            f.write(latex_code_sg)
+        print(f"LaTeX table saved to {latex_outfile_sg}")
 
         # ----- Reliability diagram -----
         # (c) Reliability diagram.
@@ -789,114 +1023,129 @@ def main():
         global_metrics_df.to_csv(global_metrics_csv, index=False)
         print(f"[INFO] Global accuracy metrics saved at {global_metrics_csv}")
 
-        # 5) Create global bar plot for overall accuracy.
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x='model_folder', y='overall_accuracy', data=global_metrics_df,
-                    palette=sns.color_palette("Paired", len(global_metrics_df)))
-        plt.xticks(rotation=90)
-        plt.title('Overall Accuracy Comparison')
-        plt.ylabel('Overall Accuracy (%)')
-        plt.xlabel('Model Folder')
-        plt.tight_layout()
-        overall_barplot_path = os.path.join(eval_out_dir, "overall_accuracy_barplot.png")
-        plt.savefig(overall_barplot_path)
-        plt.close()
-        print(f"[INFO] Overall accuracy bar plot saved at {overall_barplot_path}")
 
-        # 6) Create a grouped bar plot for per-emotion accuracy (global).
-        emotion_columns = [f'accuracy_{emotion}' for emotion in class_names]
-        global_metrics_long = pd.melt(global_metrics_df, id_vars=['model_folder', 'overall_accuracy'],
-                                      value_vars=emotion_columns,
-                                      var_name='emotion', value_name='accuracy')
-        global_metrics_long['emotion'] = global_metrics_long['emotion'].str.replace('accuracy_', '')
-        
-        # test per emotion bar plot.
-        # Assuming global_metrics_long and eval_out_dir are already defined
-        plt.figure(figsize=(16, 16))
-        ax = sns.barplot(
-            x='model_folder', 
-            y='accuracy', 
-            hue='emotion', 
-            data=global_metrics_long,
-            palette=sns.color_palette("Paired", len(global_metrics_long['emotion'].unique()))
-        )
-        plt.xticks(rotation=90)
-        plt.title('Per-Emotion Accuracy Comparison')
-        plt.ylabel('Accuracy (%)')
-        plt.xlabel('Model Folder')
 
-        ax.set_ylim(0, 100)
-        # Place the legend at the top left inside the plot area.
-        ax.legend(loc='upper right', bbox_to_anchor=(1, 1), title="Emotion")
+        # ------ Plotting General Metrics and Plots -----
 
-        plt.tight_layout()
-        per_emotion_barplot_path = os.path.join(eval_out_dir, "per_emotion_accuracy_barplot.png")
-        plt.savefig(per_emotion_barplot_path, bbox_inches='tight')
-        plt.close()
+        # For 8 emotion classes
+        plot_global_overall_accuracy(eval_out_dir, global_metrics_df, class_names)
+        plot_global_per_emotion_accuracy(eval_out_dir, global_metrics_df, class_names)
+        plot_global_top2_accuracy(eval_out_dir, global_metrics_df, class_names)
+        plot_global_nll(eval_out_dir, global_metrics_df, class_names)
 
-        print(f"[INFO] Per-emotion accuracy bar plot saved at {per_emotion_barplot_path}")
+        # For 7 emotion classes
+        plot_global_per_emotion_accuracy(eval_out_dir, global_metrics_df, class_names_7)
+        plot_global_top2_accuracy(eval_out_dir, global_metrics_df, class_names_7)
+        plot_global_nll(eval_out_dir, global_metrics_df, class_names_7)
+
+        # # 5) Create global bar plot for overall accuracy.
+        # plt.figure(figsize=(10, 6))
+        # sns.barplot(x='model_folder', y='overall_accuracy', data=global_metrics_df,
+        #             palette=sns.color_palette("Paired", len(global_metrics_df)))
+        # plt.xticks(rotation=90)
+        # plt.title('Overall Accuracy Comparison')
+        # plt.ylabel('Overall Accuracy (%)')
+        # plt.xlabel('Model Folder')
+        # plt.tight_layout()
+        # overall_barplot_path = os.path.join(eval_out_dir, "overall_accuracy_barplot.png")
+        # plt.savefig(overall_barplot_path)
+        # plt.close()
+        # print(f"[INFO] Overall accuracy bar plot saved at {overall_barplot_path}")
+
+        # # 6) Create a grouped bar plot for per-emotion accuracy (global).
+        # emotion_columns = [f'accuracy_{emotion}' for emotion in class_names]
+        # global_metrics_long = pd.melt(global_metrics_df, id_vars=['model_folder', 'overall_accuracy'],
+        #                               value_vars=emotion_columns,
+        #                               var_name='emotion', value_name='accuracy')
+        # global_metrics_long['emotion'] = global_metrics_long['emotion'].str.replace('accuracy_', '')
+        
+        # # test per emotion bar plot.
+        # # Assuming global_metrics_long and eval_out_dir are already defined
+        # plt.figure(figsize=(16, 16))
+        # ax = sns.barplot(
+        #     x='model_folder', 
+        #     y='accuracy', 
+        #     hue='emotion', 
+        #     data=global_metrics_long,
+        #     palette=sns.color_palette("Paired", len(global_metrics_long['emotion'].unique()))
+        # )
+        # plt.xticks(rotation=90)
+        # plt.title('Per-Emotion Accuracy Comparison')
+        # plt.ylabel('Accuracy (%)')
+        # plt.xlabel('Model Folder')
+
+        # ax.set_ylim(0, 100)
+        # # Place the legend at the top left inside the plot area.
+        # ax.legend(loc='upper right', bbox_to_anchor=(1, 1), title="Emotion")
+
+        # plt.tight_layout()
+        # per_emotion_barplot_path = os.path.join(eval_out_dir, "per_emotion_accuracy_barplot.png")
+        # plt.savefig(per_emotion_barplot_path, bbox_inches='tight')
+        # plt.close()
+
+        # print(f"[INFO] Per-emotion accuracy bar plot saved at {per_emotion_barplot_path}")
         
 
-        # 7) Create a grouped bar plot for per-emotion Top-2 accuracy (if not already done)
-        # Melt the DataFrame for Top-2 accuracy columns.
-        emotion_columns_top2 = [f'top2_accuracy_{emotion}' for emotion in class_names]
-        global_metrics_long_top2 = pd.melt(global_metrics_df,
-                                        id_vars=['model_folder'],
-                                        value_vars=emotion_columns_top2,
-                                        var_name='emotion', value_name='top2_accuracy')
-        # Remove the prefix from emotion names.
-        global_metrics_long_top2['emotion'] = global_metrics_long_top2['emotion'].str.replace('top2_accuracy_', '')
+        # # 7) Create a grouped bar plot for per-emotion Top-2 accuracy (if not already done)
+        # # Melt the DataFrame for Top-2 accuracy columns.
+        # emotion_columns_top2 = [f'top2_accuracy_{emotion}' for emotion in class_names]
+        # global_metrics_long_top2 = pd.melt(global_metrics_df,
+        #                                 id_vars=['model_folder'],
+        #                                 value_vars=emotion_columns_top2,
+        #                                 var_name='emotion', value_name='top2_accuracy')
+        # # Remove the prefix from emotion names.
+        # global_metrics_long_top2['emotion'] = global_metrics_long_top2['emotion'].str.replace('top2_accuracy_', '')
         
-        plt.figure(figsize=(16, 16))
-        ax = sns.barplot(
-            x='model_folder',
-            y='top2_accuracy',
-            hue='emotion',
-            data=global_metrics_long_top2,
-            palette=sns.color_palette("Paired", len(global_metrics_long_top2['emotion'].unique()))
-        )
-        plt.xticks(rotation=90)
-        plt.title('Per-Emotion Top-2 Accuracy Comparison')
-        plt.ylabel('Top-2 Accuracy (%)')
-        plt.xlabel('Model Folder')
-        ax.set_ylim(0, 100)
-        ax.legend(loc='upper left', bbox_to_anchor=(0, 1), title="Emotion")
-        plt.tight_layout()
-        top2_barplot_path = os.path.join(eval_out_dir, "per_emotion_top2_accuracy_barplot.png")
-        plt.savefig(top2_barplot_path, bbox_inches='tight')
-        plt.close()
-        print(f"[INFO] Per-emotion Top-2 accuracy bar plot saved at {top2_barplot_path}")
+        # plt.figure(figsize=(16, 16))
+        # ax = sns.barplot(
+        #     x='model_folder',
+        #     y='top2_accuracy',
+        #     hue='emotion',
+        #     data=global_metrics_long_top2,
+        #     palette=sns.color_palette("Paired", len(global_metrics_long_top2['emotion'].unique()))
+        # )
+        # plt.xticks(rotation=90)
+        # plt.title('Per-Emotion Top-2 Accuracy Comparison')
+        # plt.ylabel('Top-2 Accuracy (%)')
+        # plt.xlabel('Model Folder')
+        # ax.set_ylim(0, 100)
+        # ax.legend(loc='upper left', bbox_to_anchor=(0, 1), title="Emotion")
+        # plt.tight_layout()
+        # top2_barplot_path = os.path.join(eval_out_dir, "per_emotion_top2_accuracy_barplot.png")
+        # plt.savefig(top2_barplot_path, bbox_inches='tight')
+        # plt.close()
+        # print(f"[INFO] Per-emotion Top-2 accuracy bar plot saved at {top2_barplot_path}")
         
-        # 8) Create a grouped bar plot for per-emotion average Negative Log Likelihood (NLL).
-        # Melt the DataFrame for NLL columns.
-        emotion_columns_nll = [f'nll_{emotion}' for emotion in class_names]
-        global_metrics_long_nll = pd.melt(global_metrics_df,
-                                        id_vars=['model_folder'],
-                                        value_vars=emotion_columns_nll,
-                                        var_name='emotion', value_name='avg_nll')
-        # Remove the prefix from emotion names.
-        global_metrics_long_nll['emotion'] = global_metrics_long_nll['emotion'].str.replace('nll_', '')
+        # # 8) Create a grouped bar plot for per-emotion average Negative Log Likelihood (NLL).
+        # # Melt the DataFrame for NLL columns.
+        # emotion_columns_nll = [f'nll_{emotion}' for emotion in class_names]
+        # global_metrics_long_nll = pd.melt(global_metrics_df,
+        #                                 id_vars=['model_folder'],
+        #                                 value_vars=emotion_columns_nll,
+        #                                 var_name='emotion', value_name='avg_nll')
+        # # Remove the prefix from emotion names.
+        # global_metrics_long_nll['emotion'] = global_metrics_long_nll['emotion'].str.replace('nll_', '')
         
-        plt.figure(figsize=(16, 16))
-        ax = sns.barplot(
-            x='model_folder',
-            y='avg_nll',
-            hue='emotion',
-            data=global_metrics_long_nll,
-            palette=sns.color_palette("Paired", len(global_metrics_long_nll['emotion'].unique()))
-        )
-        plt.xticks(rotation=90)
-        plt.title('Per-Emotion Average Negative Log Likelihood (NLL) Comparison')
-        plt.ylabel('Average NLL')
-        plt.xlabel('Model Folder')
-        # Adjust y-axis limit if needed; for instance, if NLL values are around 0-3, you can set:
-        # ax.set_ylim(0, 3)
-        ax.legend(loc='upper left', bbox_to_anchor=(0, 1), title="Emotion")
-        plt.tight_layout()
-        nll_barplot_path = os.path.join(eval_out_dir, "per_emotion_nll_barplot.png")
-        plt.savefig(nll_barplot_path, bbox_inches='tight')
-        plt.close()
-        print(f"[INFO] Per-emotion NLL bar plot saved at {nll_barplot_path}")
+        # plt.figure(figsize=(16, 16))
+        # ax = sns.barplot(
+        #     x='model_folder',
+        #     y='avg_nll',
+        #     hue='emotion',
+        #     data=global_metrics_long_nll,
+        #     palette=sns.color_palette("Paired", len(global_metrics_long_nll['emotion'].unique()))
+        # )
+        # plt.xticks(rotation=90)
+        # plt.title('Per-Emotion Average Negative Log Likelihood (NLL) Comparison')
+        # plt.ylabel('Average NLL')
+        # plt.xlabel('Model Folder')
+        # # Adjust y-axis limit if needed; for instance, if NLL values are around 0-3, you can set:
+        # # ax.set_ylim(0, 3)
+        # ax.legend(loc='upper left', bbox_to_anchor=(0, 1), title="Emotion")
+        # plt.tight_layout()
+        # nll_barplot_path = os.path.join(eval_out_dir, "per_emotion_nll_barplot.png")
+        # plt.savefig(nll_barplot_path, bbox_inches='tight')
+        # plt.close()
+        # print(f"[INFO] Per-emotion NLL bar plot saved at {nll_barplot_path}")
 
     else:
         print("[WARNING] No accuracy metrics collected.")

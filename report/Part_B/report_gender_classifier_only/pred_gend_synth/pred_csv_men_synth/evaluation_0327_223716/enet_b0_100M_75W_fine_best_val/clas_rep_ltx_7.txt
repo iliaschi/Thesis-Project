@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lrrrrr}
+\hline
+Class & Acc (\%) & Precision & F1-Score & Support \\
+\hline
+Angry & 69.1 & 0.670 & 0.681 & 94 \\
+Disgust & 37.2 & 0.714 & 0.490 & 94 \\
+Fear & 66.1 & 0.765 & 0.709 & 118 \\
+Happiness & 100.0 & 0.876 & 0.934 & 99 \\
+Neutral & 46.4 & 0.390 & 0.424 & 84 \\
+Sadness & 75.4 & 0.851 & 0.800 & 114 \\
+Surprise & 85.2 & 0.815 & 0.833 & 88 \\
+micro avg & nan & 0.729 & 0.709 & 691 \\
+\hline
+Macro Avg & - & 0.726 & 0.696 & 691 \\
+Weighted Avg & - & 0.736 & 0.704 & 691 \\
+Overall Acc & \multicolumn{4}{c}{69.030} \\
+\hline
+\end{tabular}
+\caption{Classification Report}
+\label{tab:classification_report_7}
+\end{table}

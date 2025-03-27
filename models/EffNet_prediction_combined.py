@@ -148,7 +148,8 @@ def main():
     # Fine drop 0 new classifier
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2031\models"
     # Fine drop 0 full 40
-    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2230\models"
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0322_2230_drop0_OK\models"
+    
     
     # Synthetic model
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_2_synthetic_20250319_023203\models"
@@ -158,13 +159,15 @@ def main():
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_1223synthetic_on_vggface2_gender\models"
     #real
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\models"
+    # real classifier only train
+    model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\models"
 
     # Fraction 0.25
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0201frac025\models"
     # Fraction 0.5
     # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0154_frac05\models"
     # Fraction 0.75
-    model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0131_fract0.75\models"
+    # model_dir = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0131_fract0.75\models"
 
     
     
@@ -181,7 +184,7 @@ def main():
     global_out_dir = model_parent_dir
 
     timestamp = datetime.now().strftime("%m%d_%H%M")
-    overall_dir = os.path.join(global_out_dir, f"pred_comb_sy_on_re_2_{timestamp}")
+    overall_dir = os.path.join(global_out_dir, f"pred_comb_gen_on_real_2_{timestamp}")
     os.makedirs(overall_dir, exist_ok=True)
     
     # Define the class mapping.

@@ -1,0 +1,74 @@
+{
+    "Angry": {
+        "precision": 0.38860103626943004,
+        "recall": 0.7978723404255319,
+        "f1-score": 0.5226480836236934,
+        "support": 94.0
+    },
+    "Contempt": {
+        "precision": 1.0,
+        "recall": 0.011494252873563218,
+        "f1-score": 0.022727272727272728,
+        "support": 87.0
+    },
+    "Disgust": {
+        "precision": 1.0,
+        "recall": 0.07446808510638298,
+        "f1-score": 0.13861386138613863,
+        "support": 94.0
+    },
+    "Fear": {
+        "precision": 0.6821705426356589,
+        "recall": 0.7457627118644068,
+        "f1-score": 0.7125506072874493,
+        "support": 118.0
+    },
+    "Happiness": {
+        "precision": 0.7021276595744681,
+        "recall": 1.0,
+        "f1-score": 0.825,
+        "support": 99.0
+    },
+    "Neutral": {
+        "precision": 0.2974683544303797,
+        "recall": 0.5595238095238095,
+        "f1-score": 0.3884297520661157,
+        "support": 84.0
+    },
+    "Sadness": {
+        "precision": 0.8333333333333334,
+        "recall": 0.6578947368421053,
+        "f1-score": 0.7352941176470589,
+        "support": 114.0
+    },
+    "Surprise": {
+        "precision": 0.9322033898305084,
+        "recall": 0.625,
+        "f1-score": 0.7482993197278912,
+        "support": 88.0
+    },
+    "accuracy": 0.5745501285347043,
+    "macro avg": {
+        "precision": 0.7294880395092223,
+        "recall": 0.5590019920794749,
+        "f1-score": 0.5116953768082024,
+        "support": 778.0
+    },
+    "weighted avg": {
+        "precision": 0.7320777632589244,
+        "recall": 0.5745501285347043,
+        "f1-score": 0.5298121284569265,
+        "support": 778.0
+    },
+    "overall_accuracy": 57.455012853470436,
+    "per_emotion_accuracy": {
+        "Angry": 79.7872340425532,
+        "Contempt": 1.1494252873563218,
+        "Disgust": 7.446808510638298,
+        "Fear": 74.57627118644068,
+        "Happiness": 100.0,
+        "Neutral": 55.95238095238095,
+        "Sadness": 65.78947368421052,
+        "Surprise": 62.5
+    }
+}

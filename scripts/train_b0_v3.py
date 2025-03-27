@@ -49,8 +49,8 @@ EPOCHS         = 5 # 10 # 40 as the paper
 DEVICE         = "cuda" if torch.cuda.is_available() else "cpu"
 
 dropout_rate = 0.2 # only for vggface2 as a base for only synth training
-EARLY_STOP_PATIENCE = 40 # 5
-TRAIN_FRACTION  = 0.25 # Fraction of the training dataset to use, e.g. 0.1 => 10%
+EARLY_STOP_PATIENCE = 5 # 5 # 40
+TRAIN_FRACTION  = 1 # Fraction of the training dataset to use, e.g. 0.1 => 10%
 
 # Paths to your synthetic data
 # Should have the splits inside 
@@ -219,21 +219,25 @@ def create_effnet_b0_partial_frozen(
 
     # -------------- 2) Replace classifier with Dropout + Linear --------------
     model.classifier = nn.Sequential(
-        nn.Dropout(p=dropout_p),
+        # nn.Dropout(p=dropout_p), # if dropout is wanted 
         nn.Linear(in_features=1280, out_features=num_classes)
-    )
+        )
+        # # Step 2: define the final classifier EXACTLY as in your testing code
+    # model.classifier = nn.Sequential(nn.Linear(1280, num_classes))
 
     # -------------- 3) Load pretrained weights --------------
     if weights_path is not None:
         checkpoint = torch.load(weights_path, map_location=map_location)
         if isinstance(checkpoint, collections.OrderedDict):
             # Use strict=False because we've changed the classifier
-            model.load_state_dict(checkpoint, strict=False)
-            print("[INFO] Loaded pretrained weights with strict=False.")
+            # model.load_state_dict(checkpoint, strict=False)
+            model.load_state_dict(checkpoint, strict=True)
+            print("[INFO] Loaded pretrained weights with strict=T.")
         elif hasattr(checkpoint, "state_dict"):
             # Possibly a full model
-            model.load_state_dict(checkpoint.state_dict(), strict=False)
-            print("[INFO] Loaded pretrained from model object with strict=False.")
+            # model.load_state_dict(checkpoint.state_dict(), strict=False)
+            model.load_state_dict(checkpoint.state_dict(), strict=True)
+            print("[INFO] Loaded pretrained from model object with strict=T.")
         else:
             print("[WARNING] checkpoint not recognized as a state_dict. Skipped.")
     else:
@@ -246,11 +250,11 @@ def create_effnet_b0_partial_frozen(
     # -------------- 5) Unfreeze the last 3 blocks --------------
     # In timm's tf_efficientnet_b0, model.blocks is a Sequential of length 7 (indexes 0..6).
     # We'll unfreeze blocks [4, 5, 6].
-    if hasattr(model, 'blocks'):
-        for block_idx in [1,2,3]:
-            if block_idx < len(model.blocks):
-                for param in model.blocks[block_idx].parameters():
-                    param.requires_grad = True
+    # if hasattr(model, 'blocks'):
+    #     for block_idx in [1,2,3]:
+    #         if block_idx < len(model.blocks):
+    #             for param in model.blocks[block_idx].parameters():
+    #                 param.requires_grad = True
 
     # Also unfreeze the new classifier
     for param in model.classifier.parameters():
@@ -629,10 +633,10 @@ def main():
     # List of splits to process  
     
     # full names of training splits
-    # split_list = ["100M_0W", "100M_25W", "100M_50W", "100M_75W", "100M_100W", "100W_0M", "100W_25M", "100W_50M", "100W_75M"]
+    split_list = ["100M_0W", "100M_25W", "100M_50W", "100M_75W", "100M_100W", "100W_0M", "100W_25M", "100W_50M", "100W_75M"]
     
     # full dataset for overview
-    split_list = ["100M_100W"]
+    # split_list = ["100M_100W"]
 
     run_all_splits(split_list)
 

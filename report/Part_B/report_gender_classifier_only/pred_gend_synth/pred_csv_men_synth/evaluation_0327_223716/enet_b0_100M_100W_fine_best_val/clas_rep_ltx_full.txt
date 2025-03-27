@@ -1,0 +1,40 @@
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lrrrrrrrrr}
+\hline
+Class & Accuracy\% & Precision & Recall & F1-Score & Support & True Pos. & False Pos. & False Neg. & True Neg. \\
+\hline
+Angry & 71.277 & 0.496 & 0.713 & 0.585 & 94 & 67 & 68 & 27 & 616 \\
+Contempt & 13.793 & 0.231 & 0.138 & 0.173 & 87 & 12 & 40 & 75 & 651 \\
+Disgust & 39.362 & 0.698 & 0.394 & 0.503 & 94 & 37 & 16 & 57 & 668 \\
+Fear & 71.186 & 0.771 & 0.712 & 0.740 & 118 & 84 & 25 & 34 & 635 \\
+Happiness & 100.000 & 0.853 & 1.000 & 0.921 & 99 & 99 & 17 & 0 & 662 \\
+Neutral & 46.429 & 0.322 & 0.464 & 0.380 & 84 & 39 & 82 & 45 & 612 \\
+Sadness & 76.316 & 0.806 & 0.763 & 0.784 & 114 & 87 & 21 & 27 & 643 \\
+Surprise & 81.818 & 0.857 & 0.818 & 0.837 & 88 & 72 & 12 & 16 & 678 \\
+\hline
+\end{tabular}
+\caption{Per-Class Classification Metrics}
+\label{tab:scratch_metrics_class_per_class}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lr}
+\hline
+Metric & Value \\
+\hline
+Accuracy\% & 63.88 \\
+Macro Precision & 0.63 \\
+Macro Recall & 0.63 \\
+Macro F1-Score & 0.62 \\
+Macro Support & 778 \\
+Weighted Precision & 0.65 \\
+Weighted Recall & 0.64 \\
+Weighted F1-Score & 0.63 \\
+Weighted Support & 778 \\
+\hline
+\end{tabular}
+\caption{Overall Classification Metrics}
+\label{tab:scratch_metrics_class_overall}
+\end{table}

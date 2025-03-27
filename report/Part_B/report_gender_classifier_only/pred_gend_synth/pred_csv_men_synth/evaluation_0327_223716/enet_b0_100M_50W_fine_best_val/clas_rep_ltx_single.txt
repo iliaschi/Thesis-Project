@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lrrrrrrrrr}
+\hline
+Class & Acc(\%) & Prec & F1 & Support & Recall & True P. & False P. & False N. & True N. \\
+\hline
+Angry & 70.21 & 0.489 & 0.576 & 94 & 0.702 & 66 & 69 & 28 & 615 \\
+Contempt & 11.49 & 0.294 & 0.165 & 87 & 0.115 & 10 & 24 & 77 & 667 \\
+Disgust & 34.04 & 0.727 & 0.464 & 94 & 0.340 & 32 & 12 & 62 & 672 \\
+Fear & 61.02 & 0.809 & 0.696 & 118 & 0.610 & 72 & 17 & 46 & 643 \\
+Happiness & 100.00 & 0.811 & 0.896 & 99 & 1.000 & 99 & 23 & 0 & 656 \\
+Neutral & 54.76 & 0.286 & 0.376 & 84 & 0.548 & 46 & 115 & 38 & 579 \\
+Sadness & 71.05 & 0.827 & 0.764 & 114 & 0.711 & 81 & 17 & 33 & 647 \\
+Surprise & 87.50 & 0.811 & 0.842 & 88 & 0.875 & 77 & 18 & 11 & 672 \\
+\hline
+Macro Avg & - & 0.632 & 0.597 & 778 & 0.613 & - & - & - & - \\
+Weighted Avg & - & 0.649 & 0.611 & 778 & 0.621 & - & - & - & - \\
+Accuracy & \multicolumn{8}{c}{62.1} \\
+\hline
+\end{tabular}
+\caption{Classification Metrics All}
+\label{tab:scratch_metrics_class}
+\end{table}

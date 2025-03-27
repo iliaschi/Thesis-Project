@@ -1,0 +1,105 @@
+{
+    "overall": {
+        "accuracy": 0.353048940068045,
+        "macro avg": {
+            "precision": 0.3010713949002647,
+            "recall": 0.26731228710362714,
+            "f1-score": 0.26975717265405036,
+            "support": 3821
+        },
+        "weighted avg": {
+            "precision": 0.4243771137678521,
+            "recall": 0.353048940068045,
+            "f1-score": 0.37535061679101117,
+            "support": 3821
+        }
+    },
+    "Angry": {
+        "precision": 0.31097560975609756,
+        "recall": 0.35253456221198154,
+        "f1-score": 0.33045356371490275,
+        "accuracy": 0.35253456221198154,
+        "support": 434,
+        "True Positives": 153,
+        "False Positives": 339,
+        "False Negatives": 281,
+        "True Negatives": 3048
+    },
+    "Contempt": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "accuracy": 0.0,
+        "support": 0,
+        "True Positives": 0,
+        "False Positives": 209,
+        "False Negatives": 0,
+        "True Negatives": 3612
+    },
+    "Disgust": {
+        "precision": 0.19008264462809918,
+        "recall": 0.11274509803921569,
+        "f1-score": 0.14153846153846153,
+        "accuracy": 0.11274509803921569,
+        "support": 408,
+        "True Positives": 46,
+        "False Positives": 196,
+        "False Negatives": 362,
+        "True Negatives": 3217
+    },
+    "Fear": {
+        "precision": 0.12222222222222222,
+        "recall": 0.3583061889250814,
+        "f1-score": 0.18227009113504555,
+        "accuracy": 0.3583061889250814,
+        "support": 307,
+        "True Positives": 110,
+        "False Positives": 790,
+        "False Negatives": 197,
+        "True Negatives": 2724
+    },
+    "Happiness": {
+        "precision": 0.7134020618556701,
+        "recall": 0.5839662447257384,
+        "f1-score": 0.6422273781902552,
+        "accuracy": 0.5839662447257384,
+        "support": 1185,
+        "True Positives": 692,
+        "False Positives": 278,
+        "False Negatives": 493,
+        "True Negatives": 2358
+    },
+    "Neutral": {
+        "precision": 0.2937219730941704,
+        "recall": 0.19264705882352942,
+        "f1-score": 0.23268206039076375,
+        "accuracy": 0.19264705882352942,
+        "support": 680,
+        "True Positives": 131,
+        "False Positives": 315,
+        "False Negatives": 549,
+        "True Negatives": 2826
+    },
+    "Sadness": {
+        "precision": 0.47232472324723246,
+        "recall": 0.26778242677824265,
+        "f1-score": 0.3417890520694259,
+        "accuracy": 0.26778242677824265,
+        "support": 478,
+        "True Positives": 128,
+        "False Positives": 143,
+        "False Negatives": 350,
+        "True Negatives": 3200
+    },
+    "Surprise": {
+        "precision": 0.30584192439862545,
+        "recall": 0.270516717325228,
+        "f1-score": 0.2870967741935484,
+        "accuracy": 0.270516717325228,
+        "support": 329,
+        "True Positives": 89,
+        "False Positives": 202,
+        "False Negatives": 240,
+        "True Negatives": 3290
+    }
+}
