@@ -466,7 +466,7 @@ def compute_top_k_accuracy(df, class_names, k=2):
 #     plt.close()
 #     print(f"[INFO] Confidence histogram saved at {out_path}")
 
-def plot_confidence_histograms(df, class_names, out_path, bins=10):
+def plot_confidence_histograms(df, class_names, out_path, bins=5):
     """
     Create subplots for each emotion showing two overlaid density curves of confidence:
       - One for correct predictions
@@ -498,9 +498,9 @@ def plot_confidence_histograms(df, class_names, out_path, bins=10):
             hue="correct",
             bins=bins,
             element="step",     # Draw outlines instead of filled bars
-            stat="probability",     # Compute density (probability) instead of counts
+            stat= "density", # "probability",     # Compute density (probability) instead of counts
             multiple="layer",   # Overlaid curves
-            common_norm=False,  # Each hue level (correct vs. incorrect) normalized separately
+            common_norm=True,  # Each hue level (correct vs. incorrect) normalized separately
             ax=ax
         )
         
@@ -772,17 +772,23 @@ def main():
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_synth_genders\fine_synth_wom"
     # Fine synth gender men
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\training_experiment_0316_013917fine_real_gender\pred_fine_synth_genders\pred_fine_synth_men"
+
     # Fine Real men classifier only
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\pred_gend_real\pred_gend_real_men"
     # Fine Real women classifier only
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\pred_gend_real\pred_gend_real_wom"
+
     # Fine Synth men classifier only
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\pred_gend_synth\pred_csv_men_synth"
     # Fine Synth women classifier only
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0327_2011gender\pred_gend_synth\pred_csv_wom_synth"
 
     # Fractions all 
-    predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fractions\frac_preds"
+    # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fractions\frac_preds"
+
+    # Focused
+    predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fractions_best\frac_preds"
+
     # Fraction 0.25
     # predictions_root = r"C:\Users\ilias\Python\Thesis-Project\results\train_exp_3_fine_frz_0324_0201frac025\pred_comb_sy_on_re_2_0325_0156"
 
@@ -925,11 +931,11 @@ def main():
         # ----- Confidence Histogram -----
         # (e) Confidence Histogram (new).
         conf_hist_path = os.path.join(model_eval_dir, "confidence_histograms.png")
-        plot_confidence_histograms(df, class_names, conf_hist_path, bins=20)
+        plot_confidence_histograms(df, class_names, conf_hist_path, bins=10)
 
         # (e7) Confidence Histogram (new).
         conf_hist_path_7 = os.path.join(model_eval_dir, "confidence_histograms_7.png")
-        plot_confidence_histograms(df_filtered, class_names_7, conf_hist_path_7, bins=20)
+        plot_confidence_histograms(df_filtered, class_names_7, conf_hist_path_7, bins=10)
         
 
         # ----- ROC Curves -----
@@ -948,27 +954,50 @@ def main():
         df_wrong   = df[df['correct'] == False]
         if len(df_correct) > 0 and len(df_wrong) > 0:
             plt.figure()
+
+            # sns.kdeplot(df_correct['confidence'], label='Correct', clip=(0,1), cut=0)
+            # sns.kdeplot(df_wrong['confidence'], label='Incorrect', clip=(0,1), cut=0)
+            # plt.title("Confidence Distribution")
+            # plt.xlim(0,1)
+
             sns.kdeplot(df_correct['confidence'], label='Correct')
             sns.kdeplot(df_wrong['confidence'], label='Incorrect')
             plt.title("Confidence Distribution")
+
             plt.legend()
             confdist_path = os.path.join(model_eval_dir, "confidence_distribution.png")
             plt.savefig(confdist_path)
             plt.close()
+
 
         # (e7) Optional: Confidence distribution plot.
         df_correct_7 = df_filtered[df_filtered['correct'] == True]
         df_wrong_7   = df_filtered[df_filtered['correct'] == False]
         if len(df_correct_7) > 0 and len(df_wrong_7) > 0:
             plt.figure()
-            sns.kdeplot(df_correct_7['confidence'], label='Correct')
-            sns.kdeplot(df_wrong_7['confidence'], label='Incorrect')
+
+            sns.kdeplot(df_correct_7['confidence'], label='Correct', clip=(0,1), cut=0)
+            sns.kdeplot(df_wrong_7['confidence'], label='Incorrect', clip=(0,1), cut=0)
             plt.title("Confidence Distribution")
+            # plt.xlim(0,1)
+
+            # sns.kdeplot(df_correct_7['confidence'], label='Correct')
+            # sns.kdeplot(df_wrong_7['confidence'], label='Incorrect')
+            # plt.title("Confidence Distribution")
+
             plt.legend()
             confdist_path_7 = os.path.join(model_eval_dir, "confidence_distribution_7.png")
             plt.savefig(confdist_path_7)
             plt.close()
 
+            plt.figure()
+            sns.kdeplot(df_correct_7['confidence'], label='Correct', clip=(0,1), cut=0)
+            sns.kdeplot(df_wrong_7['confidence'], label='Incorrect', clip=(0,1), cut=0)
+            plt.title("Confidence Distribution")
+            plt.xlim(0,1)
+            plt.legend()
+            plt.savefig("confidence_distribution.png")
+            plt.close()
 
         # ----- Accuracy -----
         # 3) Compute overall and per-emotion accuracy.
@@ -1026,6 +1055,7 @@ def main():
 
 
         # ------ Plotting General Metrics and Plots -----
+        # from general_plots.py
 
         # For 8 emotion classes
         plot_global_overall_accuracy(eval_out_dir, global_metrics_df, class_names)
@@ -1037,6 +1067,16 @@ def main():
         plot_global_per_emotion_accuracy(eval_out_dir, global_metrics_df, class_names_7)
         plot_global_top2_accuracy(eval_out_dir, global_metrics_df, class_names_7)
         plot_global_nll(eval_out_dir, global_metrics_df, class_names_7)
+
+
+        # --- Line Plot for Emotion Classes ---
+        plot_global_per_emotion_accuracy_line(
+            eval_out_dir,       # the evaluation output dir
+            global_metrics_df,  # the DataFrame with your metrics
+            class_names_7,        # e.g. ["Angry","Contempt","Disgust","Fear",...]
+            custom_folder_order=["0","25","50","75","100"]
+        )
+
 
         # # 5) Create global bar plot for overall accuracy.
         # plt.figure(figsize=(10, 6))

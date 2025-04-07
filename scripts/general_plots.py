@@ -154,6 +154,125 @@ def plot_global_nll(eval_out_dir, global_metrics_df, class_names):
     plt.close()
     print(f"[INFO] Per-emotion NLL bar plot saved at {nll_barplot_path}")
 
+
+
+# Class accuracy line plot
+def plot_global_per_emotion_accuracy_line_1(eval_out_dir, global_metrics_df, class_names, custom_folder_order=None):
+    """
+    Creates and saves a line plot comparing per-emotion accuracy across models.
+    The DataFrame is expected to have columns like 'accuracy_{emotion}' for each emotion in 'class_names'.
+    
+    :param eval_out_dir: output directory for saving the plot
+    :param global_metrics_df: DataFrame with at least the columns: 
+        'model_folder' and 'accuracy_{emotion}' for each emotion in class_names
+    :param class_names: list of strings, e.g. ["Angry","Disgust",...]
+    :param custom_folder_order: optional list specifying the exact x-axis order 
+        (e.g. ["0","25","50","75","100"]). If provided, any folder outside this list is placed at the end.
+    """
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import os
+
+    # 1) Build a list of columns corresponding to each emotion
+    emotion_columns = [f'accuracy_{emotion}' for emotion in class_names]
+    
+    # 2) Melt the DataFrame into long format
+    #    so we have columns: model_folder, overall_accuracy, emotion, accuracy
+    global_metrics_long = pd.melt(
+        global_metrics_df,
+        id_vars=['model_folder', 'overall_accuracy'],
+        value_vars=emotion_columns,
+        var_name='emotion',
+        value_name='accuracy'
+    )
+    # remove the "accuracy_" prefix
+    global_metrics_long['emotion'] = global_metrics_long['emotion'].str.replace('accuracy_', '')
+    
+    # 3) If a custom folder order is given, sort the DataFrame accordingly
+    if custom_folder_order is not None:
+        # build a dict => folder to sort index
+        folder_to_sortidx = {val: i for i, val in enumerate(custom_folder_order)}
+        # add a sort_idx col, default 999 if not in order
+        global_metrics_long['sort_idx'] = global_metrics_long['model_folder'].apply(lambda x: folder_to_sortidx.get(x, 999))
+        global_metrics_long.sort_values('sort_idx', inplace=True)
+    else:
+        # default: just let them appear in whatever order they appear
+        pass
+
+    # 4) Create the line plot
+    plt.figure(figsize=(16, 16))
+    ax = sns.lineplot(
+        x='model_folder',
+        y='accuracy',
+        hue='emotion',
+        data=global_metrics_long,
+        marker='o',
+        palette=sns.color_palette("Paired", len(class_names)),
+        sort=False  # we rely on the DF sort order
+    )
+    plt.xticks(rotation=90)
+    plt.title('Per-Emotion Accuracy Comparison')
+    plt.ylabel('Accuracy (%)')
+    plt.xlabel('Model Folder')
+    ax.set_ylim(0, 100)
+    ax.legend(loc='upper right', bbox_to_anchor=(1, 1), title="Emotion")
+    plt.tight_layout()
+
+    # 5) Save the plot
+    filename = f"per_emot_accu_line_{len(class_names)}cls.png"
+    line_plot_path = os.path.join(eval_out_dir, filename)
+    plt.savefig(line_plot_path, bbox_inches='tight')
+    plt.close()
+    print(f"[INFO] Per-emotion accuracy line plot saved at {line_plot_path}")
+
+def plot_global_per_emotion_accuracy_line(eval_out_dir, global_metrics_df, class_names, custom_folder_order=None):
+
+        emotion_columns = [f'accuracy_{emotion}' for emotion in class_names]
+        long_df = pd.melt(
+            global_metrics_df,
+            id_vars=['model_folder', 'overall_accuracy'],
+            value_vars=emotion_columns,
+            var_name='emotion',
+            value_name='accuracy'
+        )
+        long_df['emotion'] = long_df['emotion'].str.replace('accuracy_', '')
+
+        if custom_folder_order is not None:
+            folder_to_sortidx = {val: i for i, val in enumerate(custom_folder_order)}
+            long_df['sort_idx'] = long_df['model_folder'].apply(lambda x: folder_to_sortidx.get(x, 999))
+            long_df.sort_values('sort_idx', inplace=True)
+
+        plt.figure(figsize=(10, 6))  # a moderate size
+        palette = sns.color_palette("Set2", len(class_names))  # choose a palette
+        ax = sns.lineplot(
+            x='model_folder',
+            y='accuracy',
+            hue='emotion',
+            data=long_df,
+            marker='o',
+            markersize=8,
+            linewidth=2,
+            palette=palette,
+            sort=False
+        )
+        plt.xticks(rotation=45)
+        plt.title('Emotion Class Accuracy Comparison')
+        plt.ylabel('Accuracy (%)')
+        plt.xlabel('Data Fraction')
+        ax.set_ylim(0, 100)
+        # place legend outside
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1), title="Emotion")
+        plt.grid(axis='y', alpha=0.6)
+        plt.tight_layout()
+
+        filename = f"per_emot_accu_line_{len(class_names)}cls.png"
+        line_plot_path = os.path.join(eval_out_dir, filename)
+        plt.savefig(line_plot_path, bbox_inches='tight')
+        plt.close()
+        print(f"[INFO] Per-emotion accuracy line plot saved at {line_plot_path}")
+
+
+
 # Now an if name == main plot the script name
 if __name__ == "__main__":
     print("This script is not meant to be run directly.")

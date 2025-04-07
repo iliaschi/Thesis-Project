@@ -1,0 +1,100 @@
+file,path,true_emotion,true_idx,predicted_idx,predicted_emotion,correct,confidence
+m_20_face_happy4_face_12_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_20_face_happy4_face_12_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+m_20_face_happy4_face_13_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_20_face_happy4_face_13_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+m_20_face_happy7_face_0_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_20_face_happy7_face_0_conf_1.00.jpg,Happy,4,4,Happy,True,0.9975003600120544
+m_20_face_happy7_face_10_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_20_face_happy7_face_10_conf_1.00.jpg,Happy,4,4,Happy,True,0.999996542930603
+m_20_face_happy7_face_12_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_20_face_happy7_face_12_conf_1.00.jpg,Happy,4,4,Happy,True,0.8295471668243408
+m_fotor-ai-202501192110_happy_face_12_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-202501192110_happy_face_12_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999957084655762
+m_fotor-ai-202501192110_happy_face_2_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-202501192110_happy_face_2_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999182224273682
+m_fotor-ai-202501192110_happy_face_9_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-202501192110_happy_face_9_conf_1.00.jpg,Happy,4,4,Happy,True,0.999998927116394
+m_fotor-ai-2025011921110_happy_face_14_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921110_happy_face_14_conf_1.00.jpg,Happy,4,4,Happy,True,0.999987006187439
+m_fotor-ai-2025011921110_happy_face_1_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921110_happy_face_1_conf_1.00.jpg,Happy,4,4,Happy,True,0.999038815498352
+m_fotor-ai-2025011921110_happy_face_21_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921110_happy_face_21_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999986886978149
+m_fotor-ai-2025011921110_happy_face_30_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921110_happy_face_30_conf_1.00.jpg,Happy,4,4,Happy,True,0.999992847442627
+m_fotor-ai-2025011921110_happy_face_33_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921110_happy_face_33_conf_1.00.jpg,Happy,4,4,Happy,True,0.9806846976280212
+m_fotor-ai-2025011921110_happy_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921110_happy_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999939203262329
+m_fotor-ai-2025011921117_happy_face_19_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921117_happy_face_19_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+m_fotor-ai-2025011921117_happy_face_23_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921117_happy_face_23_conf_1.00.jpg,Happy,4,4,Happy,True,0.9996987581253052
+m_fotor-ai-2025011921117_happy_face_26_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921117_happy_face_26_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+m_fotor-ai-2025011921117_happy_face_30_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921117_happy_face_30_conf_1.00.jpg,Happy,4,4,Happy,True,0.9997268319129944
+m_fotor-ai-2025011921117_happy_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-2025011921117_happy_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999914169311523
+m_fotor-ai-202501192117_happy_face_19_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-202501192117_happy_face_19_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+m_fotor-ai-202501192117_happy_face_30_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_fotor-ai-202501192117_happy_face_30_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+m_happy_m10_face_3_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m10_face_3_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999947547912598
+m_happy_m11_face_0_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m11_face_0_conf_1.00.jpg,Happy,4,4,Happy,True,0.9685826897621155
+m_happy_m11_face_3_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m11_face_3_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+m_happy_m12_face_9_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m12_face_9_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999972581863403
+m_happy_m13_face_3_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m13_face_3_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999902248382568
+m_happy_m13_face_4_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m13_face_4_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+m_happy_m14_face_16_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m14_face_16_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999979734420776
+m_happy_m15_face_11_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m15_face_11_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999545812606812
+m_happy_m15_face_5_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m15_face_5_conf_1.00.jpg,Happy,4,4,Happy,True,0.9991362690925598
+m_happy_m16_face_0_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m16_face_0_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+m_happy_m16_face_5_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m16_face_5_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999979734420776
+m_happy_m18_face_1_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m18_face_1_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999606609344482
+m_happy_m19_face_12_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m19_face_12_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+m_happy_m19_face_13_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m19_face_13_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999986886978149
+m_happy_m19_face_15_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m19_face_15_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999991655349731
+m_happy_m21_face_2_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m21_face_2_conf_1.00.jpg,Happy,4,4,Happy,True,0.9998408555984497
+m_happy_m21_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m21_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999750852584839
+m_happy_m3_face_11_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m3_face_11_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999759197235107
+m_happy_m3_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m3_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+m_happy_m4_face_1_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m4_face_1_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999986886978149
+m_happy_m5_face_4_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m5_face_4_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999972581863403
+m_happy_m5_face_8_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m5_face_8_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999992847442627
+m_happy_m6_face_0_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m6_face_0_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999985694885254
+m_happy_m6_face_8_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m6_face_8_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999997615814209
+m_happy_m6_face_9_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m6_face_9_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999960660934448
+m_happy_m7_face_12_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m7_face_12_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999879598617554
+m_happy_m7_face_14_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m7_face_14_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999960660934448
+m_happy_m8_face_11_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m8_face_11_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999995231628418
+m_happy_m9_face_23_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m9_face_23_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999746084213257
+m_happy_m_1_face_0_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m_1_face_0_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999997615814209
+m_happy_m_1_face_2_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m_1_face_2_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+m_happy_m_2_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\m_happy_m_2_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+w_happy_w_1_face_2_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_w_1_face_2_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999932050704956
+w_happy_w_1_face_4_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_w_1_face_4_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999983310699463
+w_happy_w_2_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_w_2_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999657869338989
+w_happy_women1 (1)_face_2_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (1)_face_2_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999958276748657
+w_happy_women1 (10)_face_12_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (10)_face_12_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999996423721313
+w_happy_women1 (10)_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (10)_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+w_happy_women1 (11)_face_10_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (11)_face_10_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999885559082031
+w_happy_women1 (12)_face_14_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (12)_face_14_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999995231628418
+w_happy_women1 (13)_face_13_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (13)_face_13_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999991655349731
+w_happy_women1 (13)_face_3_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (13)_face_3_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999988079071045
+w_happy_women1 (14)_face_11_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (14)_face_11_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+w_happy_women1 (14)_face_13_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (14)_face_13_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+w_happy_women1 (2)_face_4_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (2)_face_4_conf_1.00.jpg,Happy,4,4,Happy,True,0.9998527765274048
+w_happy_women1 (4)_face_0_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (4)_face_0_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999978542327881
+w_happy_women1 (4)_face_1_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (4)_face_1_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+w_happy_women1 (4)_face_8_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (4)_face_8_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+w_happy_women1 (5)_face_3_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (5)_face_3_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+w_happy_women1 (8)_face_12_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (8)_face_12_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999997615814209
+w_happy_women1 (8)_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women1 (8)_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999997615814209
+w_happy_women16_face_1_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women16_face_1_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999988079071045
+w_happy_women17_face_14_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women17_face_14_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+w_happy_women17_face_2_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women17_face_2_conf_1.00.jpg,Happy,4,4,Happy,True,0.999998927116394
+w_happy_women18_face_14_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women18_face_14_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+w_happy_women18_face_22_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women18_face_22_conf_1.00.jpg,Happy,4,4,Happy,True,1.0
+w_happy_women18_face_28_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women18_face_28_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999996423721313
+w_happy_women18_face_31_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women18_face_31_conf_1.00.jpg,Happy,4,4,Happy,True,0.9974296689033508
+w_happy_women18_face_32_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women18_face_32_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999995231628418
+w_happy_women18_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women18_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+w_happy_women18_face_9_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women18_face_9_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999997615814209
+w_happy_women19_face_16_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women19_face_16_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+w_happy_women19_face_19_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women19_face_19_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999580383300781
+w_happy_women19_face_21_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women19_face_21_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999995231628418
+w_happy_women19_face_25_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women19_face_25_conf_1.00.jpg,Happy,4,4,Happy,True,0.9998026490211487
+w_happy_women19_face_2_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women19_face_2_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999991655349731
+w_happy_women20_face_19_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women20_face_19_conf_1.00.jpg,Happy,4,4,Happy,True,0.999998927116394
+w_happy_women20_face_1_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women20_face_1_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999995231628418
+w_happy_women20_face_6_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women20_face_6_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999995231628418
+w_happy_women21_face_4_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women21_face_4_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999582767486572
+w_happy_women22_face_0_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women22_face_0_conf_1.00.jpg,Happy,4,4,Happy,True,0.9998648166656494
+w_happy_women22_face_17_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women22_face_17_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999998807907104
+w_happy_women22_face_19_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women22_face_19_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999988079071045
+w_happy_women23_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women23_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999984502792358
+w_happy_women24_face_15_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women24_face_15_conf_1.00.jpg,Happy,4,4,Happy,True,0.999998927116394
+w_happy_women24_face_3_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women24_face_3_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999924898147583
+w_happy_women24_face_5_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women24_face_5_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999943971633911
+w_happy_women24_face_7_conf_1.00.jpg,C:\Users\ilias\Python\Thesis-Project\data\synthetic\test_splits\100M_100W\Happy\w_happy_women24_face_7_conf_1.00.jpg,Happy,4,4,Happy,True,0.9999984502792358

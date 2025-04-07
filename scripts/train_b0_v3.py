@@ -63,9 +63,13 @@ train_splits = os.path.join(BASE_SYNTH_DIR, "train_splits")
 VAL_DIR = r"C:\Users\ilias\Python\Thesis-Project\data\synthetic\val_real"
 
 # A path to your existing pretrained EfficientNet weights (as a state_dict).
+# ----- With Real images as a base -----
 # C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_base_vggface2_state_dict.pth # base state dict
-PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth" # real trained state dict
-# PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_base_vggface2_state_dict.pth" # base face recognition state dict
+# PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_8_best_afew_state_dict.pth"
+
+# ------ For synthetic only with No real images -----
+PRETRAINED_WEIGHTS = r"C:\Users\ilias\Python\Thesis-Project\models\weights\enet_b0_base_vggface2_state_dict.pth" # base face recognition state dict
+
 SAVE_FINETUNED_MODEL = r"C:\Users\ilias\Python\Thesis-Project\models\weights\my_EffNet_b0_finetuned_test_cuda_synth_data_real_val.pt"
 
 
@@ -633,10 +637,10 @@ def main():
     # List of splits to process  
     
     # full names of training splits
-    split_list = ["100M_0W", "100M_25W", "100M_50W", "100M_75W", "100M_100W", "100W_0M", "100W_25M", "100W_50M", "100W_75M"]
+    # split_list = ["100M_0W", "100M_25W", "100M_50W", "100M_75W", "100M_100W", "100W_0M", "100W_25M", "100W_50M", "100W_75M"]
     
     # full dataset for overview
-    # split_list = ["100M_100W"]
+    split_list = ["100M_100W"]
 
     run_all_splits(split_list)
 
